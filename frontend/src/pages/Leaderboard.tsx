@@ -5,7 +5,17 @@ import { Trophy, Medal, Award, Star, Users, Gift, Crown, Zap } from 'lucide-reac
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState('students');
 
-  const students = [
+  type LeaderboardUser = {
+    id: number;
+    name: string;
+    points: number;
+    contributions: number;
+    level: string;
+    avatar: string;
+    company?: string;
+  };
+
+  const students: LeaderboardUser[] = [
     { id: 1, name: 'Arjun Sharma', points: 2450, contributions: 45, level: 'Gold', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150' },
     { id: 2, name: 'Priya Patel', points: 2200, contributions: 38, level: 'Gold', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150' },
     { id: 3, name: 'Vikram Singh', points: 1980, contributions: 32, level: 'Silver', avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150' },
@@ -13,7 +23,7 @@ const Leaderboard = () => {
     { id: 5, name: 'Rohit Mehta', points: 1520, contributions: 24, level: 'Bronze', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150' },
   ];
 
-  const seniors = [
+  const seniors: LeaderboardUser[] = [
     { id: 1, name: 'Dr. Rajesh Kumar', points: 3800, contributions: 89, level: 'Platinum', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150', company: 'Google' },
     { id: 2, name: 'Sunita Agarwal', points: 3650, contributions: 76, level: 'Platinum', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150', company: 'Microsoft' },
     { id: 3, name: 'Karan Malhotra', points: 3200, contributions: 62, level: 'Gold', avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150', company: 'Amazon' },

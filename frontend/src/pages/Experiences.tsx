@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Search, Filter, Heart, MessageCircle, Share2, Clock, Building, MapPin } from 'lucide-react';
 
 const Experiences = () => {
@@ -189,9 +190,11 @@ const Experiences = () => {
             <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
               Help the next generation by sharing your career journey, challenges, and insights.
             </p>
-            <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
-              Share Your Story
-            </button>
+            <Link to="/share-experience">
+              <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                Share Your Story
+              </button>
+            </Link>
           </div>
         </motion.div>
       </div>

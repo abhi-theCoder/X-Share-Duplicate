@@ -1,10 +1,37 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, User, Building, MapPin, Users, ArrowRight } from 'lucide-react';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Building,
+  MapPin,
+  Users,
+  ArrowRight,
+} from 'lucide-react';
+import axios from '../api';
 
-const SignUp = () => {
-  const [formData, setFormData] = useState({
+// ✅ Define a type for the form
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: 'student' | 'senior';
+  company: string;
+  location: string;
+}
+
+// ✅ Define backend error response type
+interface ApiError {
+  message: string;
+}
+
+const SignUp: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     password: '',
@@ -13,23 +40,64 @@ const SignUp = () => {
     company: '',
     location: '',
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
+  const navigate = useNavigate();
+
+  // ✅ Make handleChange generic
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ✅ Fix Axios typing
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate registration process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
+    setErrorMessage(null);
+
+    if (formData.password !== formData.confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post('/api/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        company: formData.role === 'senior' ? formData.company : null,
+        location: formData.role === 'senior' ? formData.location : null,
+      });
+
+      console.log('Registration successful:', response.data);
+      navigate('/login');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiError>(err)) {
+        const msg =
+          err.response?.data?.message ||
+          'Registration failed. Please try again.';
+        setErrorMessage(msg);
+        console.error('Registration failed:', msg);
+      } else {
+        setErrorMessage('An unexpected error occurred.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,7 +119,7 @@ const SignUp = () => {
             >
               <Users className="w-8 h-8 text-white" />
             </motion.div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Join ExperienceHub</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Join X Share</h1>
             <p className="text-gray-600">Create your account and start connecting</p>
           </div>
 
@@ -62,13 +130,15 @@ const SignUp = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mb-6"
           >
-            <label className="block text-sm font-medium text-gray-700 mb-3">I am a</label>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              I am a
+            </label>
             <div className="grid grid-cols-2 gap-4">
-              {['student', 'senior'].map((role) => (
+              {(['student', 'senior'] as const).map((role) => (
                 <button
                   key={role}
                   type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, role }))}
+                  onClick={() => setFormData((prev) => ({ ...prev, role }))}
                   className={`p-4 border-2 rounded-xl font-medium transition-all duration-200 ${
                     formData.role === role
                       ? 'border-orange-500 bg-orange-50 text-orange-600'
@@ -77,7 +147,9 @@ const SignUp = () => {
                 >
                   <div className="capitalize">{role}</div>
                   <div className="text-xs mt-1">
-                    {role === 'student' ? 'Looking for guidance' : 'Ready to mentor'}
+                    {role === 'student'
+                      ? 'Looking for guidance'
+                      : 'Ready to mentor'}
                   </div>
                 </button>
               ))}
@@ -86,12 +158,24 @@ const SignUp = () => {
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {errorMessage && (
+              <div
+                className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"
+                role="alert"
+              >
+                <p>{errorMessage}</p>
+              </div>
+            )}
+
+            {/* Full Name */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -106,12 +190,15 @@ const SignUp = () => {
               </div>
             </motion.div>
 
+            {/* Email */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
             >
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -126,14 +213,18 @@ const SignUp = () => {
               </div>
             </motion.div>
 
+            {/* Company + Location (for seniors only) */}
             {formData.role === 'senior' && (
               <>
+                {/* Company */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company
+                  </label>
                   <div className="relative">
                     <Building className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -148,12 +239,15 @@ const SignUp = () => {
                   </div>
                 </motion.div>
 
+                {/* Location */}
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: 0.7 }}
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
                   <div className="relative">
                     <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
@@ -170,12 +264,15 @@ const SignUp = () => {
               </>
             )}
 
+            {/* Password */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.8 }}
             >
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -192,17 +289,24 @@ const SignUp = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </motion.div>
 
+            {/* Confirm Password */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.9 }}
             >
-              <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -219,11 +323,16 @@ const SignUp = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                 >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </motion.div>
 
+            {/* Terms Checkbox */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -237,17 +346,24 @@ const SignUp = () => {
                 />
                 <span className="text-sm text-gray-600 leading-relaxed">
                   I agree to the{' '}
-                  <Link to="#" className="text-orange-600 hover:text-orange-700 font-medium">
+                  <Link
+                    to="#"
+                    className="text-orange-600 hover:text-orange-700 font-medium"
+                  >
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link to="#" className="text-orange-600 hover:text-orange-700 font-medium">
+                  <Link
+                    to="#"
+                    className="text-orange-600 hover:text-orange-700 font-medium"
+                  >
                     Privacy Policy
                   </Link>
                 </span>
               </label>
             </motion.div>
 
+            {/* Submit Button */}
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -276,7 +392,10 @@ const SignUp = () => {
           >
             <p className="text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-orange-600 hover:text-orange-700 font-medium">
+              <Link
+                to="/login"
+                className="text-orange-600 hover:text-orange-700 font-medium"
+              >
                 Sign in here
               </Link>
             </p>

@@ -1,11 +1,25 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Example: check if token exists in localStorage
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, [location]); // re-check on route change
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsLoggedIn(false);
+    navigate('/login'); // redirect to login
+  };
 
   const navigation = [
     { name: 'Experiences', href: '/experiences', icon: Users },
@@ -15,7 +29,7 @@ const Header = () => {
     { name: 'Profile', href: '/profile', icon: User },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path) => location.pathname === path;
 
   return (
     <motion.header
@@ -32,7 +46,7 @@ const Header = () => {
               <Users className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">
-              ExperienceHub
+              X Share
             </span>
           </Link>
 
@@ -63,20 +77,32 @@ const Header = () => {
             })}
           </div>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              to="/login"
-              className="px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200"
-            >
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              Sign Up
-            </Link>
+            {!isLoggedIn ? (
+              <>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-6 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Sign Up
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -117,21 +143,38 @@ const Header = () => {
                     </Link>
                   );
                 })}
+
+                {/* Auth Buttons (Mobile) */}
                 <div className="pt-4 space-y-2">
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
-                  >
-                    Sign Up
-                  </Link>
+                  {!isLoggedIn ? (
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block w-full text-center px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/signup"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block w-full text-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
+                      >
+                        Sign Up
+                      </Link>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>

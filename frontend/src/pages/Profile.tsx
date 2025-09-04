@@ -1,81 +1,140 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, Mail, MapPin, Building, Calendar, Edit3, Star, Trophy, 
-  BookOpen, MessageCircle, Heart, Upload, Save, X 
+  BookOpen, MessageCircle, Heart, Upload, Save, X , LogOut
 } from 'lucide-react';
+import LoginRequired from '../components/LoginRequired';
+import axios from '../api';
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: 'Arjun Sharma',
-    email: 'arjun.sharma@email.com',
-    role: 'Software Engineering Student',
-    company: 'IIT Delhi',
-    location: 'Delhi, India',
-    bio: 'Passionate computer science student with interests in full-stack development and machine learning. Always eager to learn from experienced professionals and contribute to the community.',
-    joinedDate: 'January 2024',
-    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=200',
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    role: '',
+    company: '',
+    location: '',
+    bio: ''
   });
 
-  const stats = [
-    { label: 'Total Points', value: '2,450', icon: Star, color: 'from-yellow-400 to-yellow-600' },
-    { label: 'Contributions', value: '45', icon: BookOpen, color: 'from-blue-400 to-blue-600' },
-    { label: 'Questions Asked', value: '12', icon: MessageCircle, color: 'from-green-400 to-green-600' },
-    { label: 'Likes Received', value: '189', icon: Heart, color: 'from-red-400 to-red-600' },
-  ];
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('User not authenticated.');
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'question',
-      title: 'How to prepare for system design interviews?',
-      points: '+25',
-      timeAgo: '2 days ago',
-    },
-    {
-      id: 2,
-      type: 'resource',
-      title: 'Uploaded React Interview Questions',
-      points: '+30',
-      timeAgo: '5 days ago',
-    },
-    {
-      id: 3,
-      type: 'answer',
-      title: 'Answered: Best practices for Node.js development',
-      points: '+15',
-      timeAgo: '1 week ago',
-    },
-  ];
+          setLoading(false);
+          return;
+        }
 
-  const achievements = [
-    { title: 'First Question', description: 'Asked your first question', icon: MessageCircle, earned: true },
-    { title: 'Helpful Contributor', description: 'Received 100+ likes', icon: Heart, earned: true },
-    { title: 'Knowledge Sharer', description: 'Uploaded 5+ resources', icon: BookOpen, earned: false },
-    { title: 'Top Performer', description: 'Reached 5000 points', icon: Trophy, earned: false },
-  ];
+        const response = await axios.get('api/profile', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setProfileData(response.data);
+        setFormData({
+          name: response.data.name,
+          role: response.data.role,
+          company: response.data.company,
+          location: response.data.location,
+          bio: response.data.bio
+        });
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+        setError('Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Save logic would go here
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put('api/profile', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setProfileData(prev => ({ ...prev, ...formData }));
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      setError('Failed to save profile changes.');
+    }
   };
 
   const handleCancel = () => {
+    setFormData({
+      name: profileData.name,
+      role: profileData.role,
+      company: profileData.company,
+      location: profileData.location,
+      bio: profileData.bio
+    });
     setIsEditing(false);
-    // Reset form data to original values
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setProfileData(prev => ({
+  const handleChange = (e) => {
+    setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
 
+  // const handleLogout = () => {
+  //   localStorage.clear();
+  //   navigate('/login'); // redirect to login
+  // };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+   // Show Login Required screen
+  if (error === 'User not authenticated.') {
+    return <LoginRequired />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center text-red-600">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center text-gray-500">
+        <p>No profile data available.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        <div className="flex justify-end mb-6">
+          {/* <button
+            onClick={handleLogout}
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-700 text-white rounded-xl font-medium hover:from-red-600 hover:to-red-800 transform hover:scale-105 transition-all duration-200"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </button> */}
+        </div>
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Profile Information */}
           <div className="lg:col-span-1">
@@ -88,7 +147,7 @@ const Profile = () => {
               <div className="text-center mb-6">
                 <div className="relative inline-block">
                   <img
-                    src={profileData.avatar}
+                    src={profileData.avatar || 'https://placehold.co/96x96/e5e7eb/4b5563?text=User'}
                     alt={profileData.name}
                     className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-orange-200"
                   />
@@ -143,7 +202,7 @@ const Profile = () => {
                     <input
                       type="text"
                       name="name"
-                      value={profileData.name}
+                      value={formData.name}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                     />
@@ -153,7 +212,7 @@ const Profile = () => {
                     <input
                       type="text"
                       name="role"
-                      value={profileData.role}
+                      value={formData.role}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                     />
@@ -163,7 +222,7 @@ const Profile = () => {
                     <input
                       type="text"
                       name="company"
-                      value={profileData.company}
+                      value={formData.company}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                     />
@@ -173,7 +232,7 @@ const Profile = () => {
                     <input
                       type="text"
                       name="location"
-                      value={profileData.location}
+                      value={formData.location}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
                     />
@@ -182,7 +241,7 @@ const Profile = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
                     <textarea
                       name="bio"
-                      value={profileData.bio}
+                      value={formData.bio}
                       onChange={handleChange}
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none"
@@ -220,7 +279,7 @@ const Profile = () => {
                 Achievements
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {achievements.map((achievement, index) => {
+                {profileData.achievements.map((achievement, index) => {
                   const IconComponent = achievement.icon;
                   return (
                     <div
@@ -251,7 +310,7 @@ const Profile = () => {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
-              {stats.map((stat, index) => {
+              {profileData.stats.map((stat, index) => {
                 const IconComponent = stat.icon;
                 return (
                   <div
@@ -277,7 +336,7 @@ const Profile = () => {
             >
               <h3 className="text-xl font-bold text-gray-800 mb-6">Recent Activity</h3>
               <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
+                {profileData.recentActivity.map((activity, index) => (
                   <div
                     key={activity.id}
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-orange-50 transition-colors duration-200"
