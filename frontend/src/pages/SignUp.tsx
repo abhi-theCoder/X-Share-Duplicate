@@ -85,17 +85,10 @@ const SignUp: React.FC = () => {
 
       console.log('Registration successful:', response.data);
       navigate('/login');
-    } catch (err: unknown) {
-      if (axios.isAxiosError<ApiError>(err)) {
-        const msg =
-          err.response?.data?.message ||
-          'Registration failed. Please try again.';
-        setErrorMessage(msg);
-        console.error('Registration failed:', msg);
-      } else {
-        setErrorMessage('An unexpected error occurred.');
-      }
-    } finally {
+    } catch (error: any) {
+        console.error('Login failed:', error.response?.data?.message || error.message);
+        setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+      } finally {
       setIsLoading(false);
     }
   };
