@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  User, Mail, MapPin, Building, Calendar, Edit3, Star, Trophy, 
-  BookOpen, MessageCircle, Heart, Upload, Save, X , LogOut, HeartHandshake, Users, ThumbsUp
+import {
+  User, Mail, MapPin, Building, Calendar, Edit3, Star, Trophy,
+  BookOpen, MessageCircle, Heart, Upload, Save, X, LogOut, HeartHandshake, Users, ThumbsUp
 } from 'lucide-react';
 import LoginRequired from '../components/LoginRequired';
 import axios from '../api';
@@ -136,7 +136,7 @@ const Profile = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-end mb-6">{/* Logout button */}</div>
         <div className="grid lg:grid-cols-3 gap-8">
-          
+
           {/* Profile Info */}
           <div className="lg:col-span-1">
             <motion.div
@@ -210,7 +210,7 @@ const Profile = () => {
                 Achievements
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {profileData.achievements.map((achievement: any, index: number) => {
+                {profileData.achievements?.map((achievement: any, index: number) => {
                   const IconComponent = iconMap[achievement.icon] || User;
                   return (
                     <div
@@ -241,7 +241,7 @@ const Profile = () => {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
-              {profileData.stats.map((stat: any) => {
+              {profileData.stats?.map((stat: any) => {
                 const IconComponent = iconMap[stat.icon] || User;
                 return (
                   <div
@@ -267,7 +267,7 @@ const Profile = () => {
             >
               <h3 className="text-xl font-bold text-gray-800 mb-6">Recent Activity</h3>
               <div className="space-y-4">
-                {profileData.recentActivity.map((activity: any) => {
+                {profileData.recentActivity?.map((activity: any) => {
                   const IconComponent = iconMap[activity?.icon] || User;
                   return (
                     <div
