@@ -84,7 +84,7 @@ export default function ShareExperiencePage() {
     }
 
     try {
-      const response = await axios.post('/api/experience/share', formData, {
+      const response = await axios.post('/api/experiences/share', formData, {
         headers: {
           Authorization: `Bearer ${token}`
         }

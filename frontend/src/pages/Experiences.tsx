@@ -1,66 +1,200 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Search, Filter, Heart, MessageCircle, Share2, Clock, Building, MapPin } from 'lucide-react';
+import { Search, Filter, MessageCircle, Share2, Clock, Building, MapPin, ThumbsUp, ThumbsDown } from 'lucide-react';
+import axios from '../api';
 
-const Experiences = () => {
+interface Experience {
+  id: number;
+  upvotes: number;
+  downvotes: number;
+  comments_count: number;
+  users?: { name: string };
+  role: string;
+  company: string;
+  location: string;
+  created_at: string;
+  type: string;
+  overall_experience?: string;
+  preparation_tips?: string;
+  work_culture?: string;
+  // Assumed new field from backend to indicate current user's vote
+  userVote?: 'upvote' | 'downvote' | null;
+}
+
+const formatDate = (dateString: string | undefined): string => {
+  if (!dateString) return 'Date not available';
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+};
+
+// Colors for dynamic avatars
+const colors = ['#FF5733', '#33FF57', '#3357FF', '#F0A500', '#25B7D9', '#E63946', '#2A9D8F'];
+
+// Function to generate a consistent color from a string
+const stringToColor = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+
+const Experiences: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Use a placeholder ID from localStorage. In a real app, this should come from a secure authentication system.
+  const [currentUserId] = useState<string>(() => {
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      userId = crypto.randomUUID();
+      localStorage.setItem('userId', userId);
+    }
+    return userId;
+  });
 
-  const categories = ['All', 'Software Engineer', 'Product Manager', 'Data Scientist', 'Designer', 'Consultant'];
+  // State to manage user's votes based on backend data
+  const [userVotes, setUserVotes] = useState<Record<number, 'upvote' | 'downvote' | null>>({});
 
-  const experiences = [
-    {
-      id: 1,
-      author: 'Priya Sharma',
-      role: 'Senior Software Engineer',
-      company: 'Google',
-      location: 'Bangalore',
-      avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150',
-      title: 'From Tier-3 College to Google: My Journey',
-      content: 'I want to share how I transitioned from a tier-3 engineering college to landing a job at Google. The key was consistent practice, open source contributions, and never giving up on my dreams...',
-      likes: 234,
-      comments: 45,
-      timeAgo: '2 days ago',
-      category: 'Software Engineer',
-    },
-    {
-      id: 2,
-      author: 'Rahul Mehta',
-      role: 'Product Manager',
-      company: 'Microsoft',
-      location: 'Hyderabad',
-      avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150',
-      title: 'Breaking into Product Management without an MBA',
-      content: 'Many believe you need an MBA to become a Product Manager, but I proved them wrong. Here\'s how I built the right skills and network to land my dream role...',
-      likes: 189,
-      comments: 32,
-      timeAgo: '5 days ago',
-      category: 'Product Manager',
-    },
-    {
-      id: 3,
-      author: 'Anita Patel',
-      role: 'Data Scientist',
-      company: 'Amazon',
-      location: 'Mumbai',
-      avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150',
-      title: 'Transitioning from Finance to Data Science',
-      content: 'After 5 years in finance, I decided to pivot to data science. The journey wasn\'t easy, but with the right strategy and persistence, I made it work...',
-      likes: 156,
-      comments: 28,
-      timeAgo: '1 week ago',
-      category: 'Data Scientist',
-    },
-  ];
+  const categories = ['All', 'internship', 'job', 'hackathon', 'other'];
+
+  const fetchExperiences = async () => {
+    try {
+      // We assume the backend now includes a userVote field in the response
+      const response = await axios.get<Experience[]>('/api/experiences');
+      const experiencesData = response.data;
+
+      // Initialize the userVotes state based on the fetched data
+      const initialVotes = experiencesData.reduce((acc, exp) => {
+        if (exp.userVote) {
+          acc[exp.id] = exp.userVote;
+        }
+        return acc;
+      }, {} as Record<number, 'upvote' | 'downvote' | null>);
+      
+      setUserVotes(initialVotes);
+      setExperiences(experiencesData);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch experiences:', err);
+      setError('Failed to load experiences. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExperiences();
+  }, []);
+
+  const handleVote = async (e: React.MouseEvent<HTMLButtonElement>, experienceId: number, voteType: 'upvote' | 'downvote') => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const currentVote = userVotes[experienceId];
+    let newVoteType: 'upvote' | 'downvote' | null = voteType;
+
+    // Check if the user is un-voting or changing their vote
+    if (currentVote === voteType) {
+      newVoteType = null; // Un-vote
+    } else {
+      newVoteType = voteType; // New vote or changing vote
+    }
+
+    // Optimistically update the UI
+    setExperiences(prevExperiences => prevExperiences.map(exp => {
+      if (exp.id === experienceId) {
+        const upvotes = exp.upvotes || 0;
+        const downvotes = exp.downvotes || 0;
+
+        // Adjust counts based on the new vote action
+        if (newVoteType === 'upvote') {
+          return {
+            ...exp,
+            upvotes: upvotes + (currentVote !== 'upvote' ? 1 : 0),
+            downvotes: currentVote === 'downvote' ? downvotes - 1 : downvotes,
+            userVote: newVoteType
+          };
+        } else if (newVoteType === 'downvote') {
+          return {
+            ...exp,
+            upvotes: currentVote === 'upvote' ? upvotes - 1 : upvotes,
+            downvotes: downvotes + (currentVote !== 'downvote' ? 1 : 0),
+            userVote: newVoteType
+          };
+        } else { // Un-vote
+          return {
+            ...exp,
+            upvotes: currentVote === 'upvote' ? upvotes - 1 : upvotes,
+            downvotes: currentVote === 'downvote' ? downvotes - 1 : downvotes,
+            userVote: newVoteType
+          };
+        }
+      }
+      return exp;
+    }));
+
+    // Update local user votes state
+    setUserVotes(prevVotes => ({
+      ...prevVotes,
+      [experienceId]: newVoteType,
+    }));
+    
+    // Send the vote to the backend
+    try {
+      await axios.post(`/api/experiences/${experienceId}/vote`, {
+        userId: currentUserId,
+        voteType: newVoteType
+      });
+    } catch (err) {
+      console.error('Failed to submit vote:', err);
+      // Revert the state changes on failure by refetching data
+      fetchExperiences();
+    }
+  };
 
   const filteredExperiences = experiences.filter(exp => {
-    const matchesSearch = exp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exp.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exp.author.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || exp.category === selectedCategory;
+    const syntheticTitle = `${exp.role || ''} at ${exp.company || ''}`;
+    const syntheticContent = `${exp.overall_experience || ''} ${exp.preparation_tips || ''} ${exp.work_culture || ''}`;
+    const authorName = exp.users?.name || '';
+
+    const matchesSearch = syntheticTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         syntheticContent.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         authorName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || exp.type === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center text-red-600">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  const getInitials = (name: string | undefined): string => {
+    if (!name) return 'U';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
 
   return (
     <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
@@ -112,68 +246,90 @@ const Experiences = () => {
 
         {/* Experiences Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredExperiences.map((experience, index) => (
-            <motion.article
-              key={experience.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-orange-200 group"
-            >
-              <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <img
-                    src={experience.avatar}
-                    alt={experience.author}
-                    className="w-12 h-12 rounded-full object-cover mr-4"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-800">{experience.author}</h3>
-                    <p className="text-sm text-gray-500">{experience.role}</p>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <Building className="w-4 h-4 mr-1" />
-                      <span className="mr-3">{experience.company}</span>
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span>{experience.location}</span>
+          {filteredExperiences.length > 0 ? (
+            filteredExperiences.map((experience, index) => (
+              <motion.article
+                key={experience.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-orange-200 group"
+              >
+                <Link to={`/experiences/${experience.id}`} className="block">
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4"
+                        style={{ backgroundColor: stringToColor(experience.users?.name || String(experience.id)) }}
+                      >
+                        {getInitials(experience.users?.name || `User ${experience.id}`)}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-800">{experience.users?.name || `User ${experience.id}`}</h3>
+                        <p className="text-sm text-gray-500">{experience.role}</p>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                          <Building className="w-4 h-4 mr-1" />
+                          <span className="mr-3">{experience.company}</span>
+                          <MapPin className="w-4 h-4 mr-1" />
+                          <span>{experience.location}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <h4 className="text-lg font-bold text-gray-800 mb-3 group-hover:text-orange-600 transition-colors duration-200">
+                      {experience.role || 'Career Experience'} at {experience.company || 'A Company'}
+                    </h4>
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {experience.overall_experience || experience.preparation_tips || 'No experience summary provided.'}
+                    </p>
+
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{formatDate(experience.created_at)}</span>
+                      </div>
+                      <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
+                        {experience.type}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <div className="flex items-center space-x-6">
+                        <button
+                          onClick={(e) => handleVote(e, experience.id, 'upvote')}
+                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${userVotes[experience.id] === 'upvote' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                        >
+                          <ThumbsUp className={`w-5 h-5 ${userVotes[experience.id] === 'upvote' ? 'fill-current' : ''}`} />
+                          <span>{experience.upvotes}</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleVote(e, experience.id, 'downvote')}
+                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${userVotes[experience.id] === 'downvote' ? 'bg-red-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                        >
+                          <ThumbsDown className={`w-5 h-5 ${userVotes[experience.id] === 'downvote' ? 'fill-current' : ''}`} />
+                          <span>{experience.downvotes}</span>
+                        </button>
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <MessageCircle className="w-5 h-5" />
+                          <span>{experience.comments_count}</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        className="text-gray-500 hover:text-blue-500 transition-colors duration-200"
+                      >
+                        <Share2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                <h4 className="text-lg font-bold text-gray-800 mb-3 group-hover:text-orange-600 transition-colors duration-200">
-                  {experience.title}
-                </h4>
-                <p className="text-gray-600 mb-4 line-clamp-3">
-                  {experience.content}
-                </p>
-
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
-                    <span>{experience.timeAgo}</span>
-                  </div>
-                  <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
-                    {experience.category}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center space-x-6">
-                    <button className="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition-colors duration-200">
-                      <Heart className="w-5 h-5" />
-                      <span>{experience.likes}</span>
-                    </button>
-                    <button className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors duration-200">
-                      <MessageCircle className="w-5 h-5" />
-                      <span>{experience.comments}</span>
-                    </button>
-                  </div>
-                  <button className="text-gray-500 hover:text-green-500 transition-colors duration-200">
-                    <Share2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </motion.article>
-          ))}
+                </Link>
+              </motion.article>
+            ))
+          ) : (
+            <div className="lg:col-span-3 text-center py-12 text-gray-500">
+              <p>No experiences found. Try adjusting your search or filters.</p>
+            </div>
+          )}
         </div>
 
         {/* Share Experience CTA */}

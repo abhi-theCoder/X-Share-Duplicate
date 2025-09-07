@@ -56,4 +56,194 @@ async function shareExperience(req, res) {
   }
 }
 
-module.exports = { shareExperience };
+async function getExperiences(req, res) {
+  try {
+    // Select all fields from the 'experiences' table (*) and join with the 'users' table
+    // to get all of its fields (*) using the foreign key relationship.
+    const { data: experiences, error } = await supabase
+      .from('experiences')
+      .select('*, users(*)');
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(200).json(experiences);
+  } catch (error) {
+    console.error('Error fetching experiences:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+// controllers/experienceController.js
+// Existing getSingleExperience function (completed previously)
+async function getSingleExperience(req, res) {
+  const { id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from('experiences')
+      .select('*, users(*)')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Supabase query error:', error);
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ message: 'Experience not found.' });
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error('Error in getSingleExperience:', err);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+// New function to get all comments for a specific experience
+async function getComments(req, res) {
+  const { id } = req.params;
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*, users(name)') // Join with users to get the commenter's name
+      .eq('experience_id', id)
+      .order('created_at', { ascending: true }); // Order by date
+
+    if (error) {
+      console.error('Error fetching comments:', error);
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error('Error in getComments:', err);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+// New function to add a comment
+async function addComment(req, res) {
+  const { id } = req.params;
+  const { userId, commentText } = req.body;
+  try {
+    // Insert the new comment into the comments table
+    const { data: newComment, error: commentError } = await supabase
+      .from('comments')
+      .insert({ experience_id: id, user_id: userId, comment_text: commentText })
+      .select();
+
+    if (commentError) {
+      console.error('Error adding comment:', commentError);
+      return res.status(500).json({ message: 'Failed to add comment.' });
+    }
+
+    // Increment the comments_count in the experiences table
+    const { data: updatedExperience, error: updateError } = await supabase
+      .from('experiences')
+      .update({ comments_count: (await supabase.from('experiences').select('comments_count').eq('id', id).single()).data.comments_count + 1 })
+      .eq('id', id)
+      .select();
+    
+    if (updateError) {
+      console.error('Error updating comments count:', updateError);
+    }
+    
+    res.status(201).json(newComment[0]);
+  } catch (err) {
+    console.error('Error in addComment:', err);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+// New function to handle voting (upvotes and downvotes)
+// New function to handle voting (upvotes and downvotes)
+async function handleVote(req, res) {
+  const { id } = req.params;
+  const { userId, voteType } = req.body;
+  
+  try {
+    const { data: experience, error: fetchError } = await supabase
+      .from('experiences')
+      .select('upvotes, downvotes, user_voted')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !experience) {
+      console.error('Error fetching experience for voting:', fetchError);
+      return res.status(404).json({ message: 'Experience not found.' });
+    }
+
+    let upvotes = experience.upvotes;
+    let downvotes = experience.downvotes;
+    const userVoted = experience.user_voted; // The current vote status from the database
+
+    let updatedExperience = {};
+    let newVoteStatus = null; // The new status to be saved
+
+    // Determine the new vote status based on the user's action
+    if (voteType === 'upvote') {
+      if (userVoted === 'upvote') {
+        // User is un-voting an upvote
+        upvotes -= 1;
+        newVoteStatus = null;
+      } else {
+        // User is upvoting or changing from a downvote
+        upvotes += 1;
+        if (userVoted === 'downvote') {
+          downvotes -= 1;
+        }
+        newVoteStatus = 'upvote';
+      }
+    } else if (voteType === 'downvote') {
+      if (userVoted === 'downvote') {
+        // User is un-voting a downvote
+        downvotes -= 1;
+        newVoteStatus = null;
+      } else {
+        // User is downvoting or changing from an upvote
+        downvotes += 1;
+        if (userVoted === 'upvote') {
+          upvotes -= 1;
+        }
+        newVoteStatus = 'downvote';
+      }
+    }
+
+    // Prepare the update payload for Supabase
+    updatedExperience.upvotes = upvotes;
+    updatedExperience.downvotes = downvotes;
+    // Map the new status to the database field name
+    updatedExperience.user_voted = newVoteStatus;
+
+    const { data, error } = await supabase
+      .from('experiences')
+      .update(updatedExperience)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating vote:', error);
+      return res.status(500).json({ message: 'Failed to update vote.' });
+    }
+
+    // Map the database response to the frontend's expected format
+    const responseData = {
+      ...data,
+      userVote: data.user_voted,
+    };
+
+    res.status(200).json(responseData);
+
+  } catch (err) {
+    console.error('Error in handleVote:', err);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
+
+// You must export all functions you want to use in your routes
+module.exports = { shareExperience, getExperiences, getSingleExperience, getComments, addComment, handleVote };

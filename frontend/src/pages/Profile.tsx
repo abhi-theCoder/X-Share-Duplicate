@@ -55,6 +55,7 @@ const Profile = () => {
         const response = await axios.get('api/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log(response)
         setProfileData(response.data);
         setFormData({
           name: response.data.name,
@@ -180,7 +181,7 @@ const Profile = () => {
                     </div>
                     <div className="flex items-center space-x-3 text-gray-600">
                       <Calendar className="w-5 h-5" />
-                      <span>Joined {profileData.joinedDate}</span>
+                      <span>Joined {new Date(profileData.joined_date).toUTCString()}</span>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-gray-100">
@@ -194,7 +195,82 @@ const Profile = () => {
                   </button>
                 </div>
               ) : (
-                <div>{/* editing form goes here */}</div>
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div className="space-y-1">
+                    <label htmlFor="name" className="text-sm font-medium text-gray-700">Name</label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                    />
+                  </div>
+                  {/* Role */}
+                  <div className="space-y-1">
+                    <label htmlFor="role" className="text-sm font-medium text-gray-700">Role</label>
+                    <input
+                      type="text"
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                    />
+                  </div>
+                  {/* Company */}
+                  <div className="space-y-1">
+                    <label htmlFor="company" className="text-sm font-medium text-gray-700">Company</label>
+                    <input
+                      type="text"
+                      id="company"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                    />
+                  </div>
+                  {/* Location */}
+                  <div className="space-y-1">
+                    <label htmlFor="location" className="text-sm font-medium text-gray-700">Location</label>
+                    <input
+                      type="text"
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                    />
+                  </div>
+                  {/* Bio */}
+                  <div className="space-y-1">
+                    <label htmlFor="bio" className="text-sm font-medium text-gray-700">Bio</label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      value={formData.bio}
+                      onChange={handleChange}
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                    ></textarea>
+                  </div>
+                  <div className="flex space-x-4 pt-2">
+                    <button
+                      onClick={handleSave}
+                      className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200"
+                    >
+                      <Save className="w-4 h-4 mr-2" /> Save Changes
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <X className="w-4 h-4 mr-2" /> Cancel
+                    </button>
+                  </div>
+                </div>
               )}
             </motion.div>
 

@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Footer from './components/Footer';
 import ShareExperiencePage from './pages/Share-experience';
+import ExperienceDetail from './pages/ExperienceDetail';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/share-experience" element={<ShareExperiencePage/>} />
+            <Route path="/experiences/:id" element={<ExperienceDetail />} />
             <Route path="/qa" element={<QAndA />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/leaderboard" element={<Leaderboard />} />

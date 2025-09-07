@@ -16,7 +16,7 @@ app.use(express.json());
 
 // Mount the authentication routes under the /api/auth path
 app.use('/api/auth', authRoutes);
-app.use('/api/experience', experienceRoutes);
+app.use('/api/experiences', experienceRoutes);
 app.use('/api/profile',profileRoutes);
 
 // A simple welcome route to confirm the server is running
