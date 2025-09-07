@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail,
   Lock,
@@ -45,6 +45,7 @@ const SignUp: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showCoinAnimation, setShowCoinAnimation] = useState(false);
 
   const navigate = useNavigate();
 
@@ -84,7 +85,12 @@ const SignUp: React.FC = () => {
       });
 
       console.log('Registration successful:', response.data);
-      navigate('/login');
+      setShowCoinAnimation(true);
+      setTimeout(() => {
+        setShowCoinAnimation(false);
+        navigate('/login');
+      }, 4000); // Wait 4 seconds for animation to complete
+
     } catch (error: any) {
         console.error('Login failed:', error.response?.data?.message || error.message);
         setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
@@ -93,8 +99,81 @@ const SignUp: React.FC = () => {
     }
   };
 
+  const coinVariants = {
+    hidden: { opacity: 0, scale: 0.5, y: 0, rotate: 0 },
+    visible: {
+      opacity: 1,
+      scale: [1, 1.2, 1],
+      y: [0, -20, 0],
+      rotate: [0, 360],
+      transition: {
+        type: 'tween', // Changed from 'spring' to 'tween' to allow multiple keyframes
+        duration: 0.8,
+        ease: 'easeInOut',
+      },
+    },
+    burst: (i: number) => ({
+      opacity: [1, 0],
+      scale: [1, 2],
+      y: [0, Math.random() * -150 - 50],
+      x: [0, Math.random() * 100 - 50],
+      rotate: [0, Math.random() * 720 - 360],
+      transition: {
+        duration: 0.8,
+        ease: 'easeOut',
+        delay: i * 0.05,
+      },
+    }),
+  };
+
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50 via-white to-green-50">
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+      <AnimatePresence>
+        {showCoinAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="relative p-8 bg-white rounded-2xl shadow-2xl flex flex-col items-center justify-center text-center max-w-sm mx-auto"
+            >
+              <h3 className="text-3xl font-bold text-blue-600 mb-4">Signup Bonus!</h3>
+              <div className="text-4xl font-extrabold text-navy-900">
+                <span className="text-6xl font-extrabold text-purple-600">50</span> Coins
+              </div>
+              <p className="mt-2 text-gray-600">
+                Welcome! Your bonus coins have been added to your profile.
+              </p>
+              
+              {/* Coin Particles Animation */}
+              {[...Array(25)].map((_, i) => (
+                <motion.span
+                  key={i}
+                  variants={coinVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="burst"
+                  custom={i}
+                  className="absolute text-3xl"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    filter: `drop-shadow(0 0 5px rgba(100,200,255,0.8))`,
+                  }}
+                >
+                  ✨
+                </motion.span>
+              ))}
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

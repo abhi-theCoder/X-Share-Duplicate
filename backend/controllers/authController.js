@@ -37,6 +37,7 @@ async function registerUser(req, res) {
       email,
       password: hashedPassword,
       role,
+      points:50,
       // Conditionally add company and location if the role is 'senior'
       ...(role === 'senior' && { company, location }),
     };

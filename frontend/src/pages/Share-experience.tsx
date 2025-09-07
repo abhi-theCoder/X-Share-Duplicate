@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from '../api';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,6 +23,7 @@ export default function ShareExperiencePage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [showCoinAnimation, setShowCoinAnimation] = useState(false);
   const navigate = useNavigate();
 
   const steps = [
@@ -90,11 +91,13 @@ export default function ShareExperiencePage() {
         }
       });
       
-      // Log the success response from the backend
       console.log('Experience shared successfully:', response.data);
-
-      // Navigate to the user's profile or experience list page
-      navigate('/profile');
+      
+      setShowCoinAnimation(true);
+      setTimeout(() => {
+        setShowCoinAnimation(false);
+        navigate('/profile');
+      }, 4000); // Wait 4 seconds for animation to complete
     } catch (error) {
       console.error('Error sharing experience:', error.response?.data?.message || error.message);
       setSubmitError(error.response?.data?.message || 'Failed to share experience. Please try again.');
@@ -104,21 +107,123 @@ export default function ShareExperiencePage() {
   };
 
   const handleNext = async () => {
-    if (currentStep < 5) {
-      setCurrentStep(currentStep + 1);
-    } else {
+    setSubmitError('');
+    if (currentStep === 1) {
+      if (!formData.company.trim() || !formData.role.trim() || !formData.location.trim() || !formData.date.trim()) {
+        setSubmitError('Please fill in all compulsory fields in this section.');
+        return;
+      }
+    } else if (currentStep === 2) {
+      if (formData.selection_rounds.length === 0) {
+        setSubmitError('Please select at least one selection round.');
+        return;
+      }
+    } else if (currentStep === 3) {
+      const hasTechnicalQuestion = formData.technical_questions.some(q => q.trim() !== '');
+      const hasHrQuestion = formData.hr_questions.some(q => q.trim() !== '');
+      if (!hasTechnicalQuestion && !hasHrQuestion) {
+        setSubmitError('Please provide at least one technical or HR question.');
+        return;
+      }
+    } else if (currentStep === 4) {
+      if (!formData.preparation_tips.trim() || !formData.work_culture.trim()) {
+        setSubmitError('Please fill in both Preparation Tips and Work Culture & Environment.');
+        return;
+      }
+    } else if (currentStep === 5) {
+      if (!formData.overall_experience.trim()) {
+        setSubmitError('Overall experience summary is required.');
+        return;
+      }
       await handleSubmit();
+      return;
     }
+    
+    setCurrentStep(currentStep + 1);
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
+      setSubmitError('');
       setCurrentStep(currentStep - 1);
+    }
+  };
+  
+  const coinVariants = {
+    hidden: { opacity: 0, scale: 0 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      y: [0, -100, -200],
+      x: () => Math.random() * 200 - 100,
+      rotate: () => Math.random() * 360,
+      transition: {
+        duration: 2,
+        ease: "easeInOut"
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      y: -200, 
+      scale: 0.5,
+      transition: { duration: 1, ease: "easeOut" }
     }
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-10">
+    <div className="bg-gray-50 min-h-screen py-10 relative overflow-hidden">
+      <AnimatePresence>
+        {showCoinAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="relative p-8 bg-white rounded-2xl shadow-2xl flex flex-col items-center justify-center text-center max-w-sm mx-auto"
+            >
+              <h3 className="text-3xl font-bold text-yellow-500 mb-4">You Earned Coins!</h3>
+              <div className="text-4xl font-extrabold text-navy-900">
+                <span className="text-6xl font-extrabold text-green-600">50</span> Coins
+              </div>
+              <p className="mt-2 text-gray-600">
+                Thank you for sharing your experience!
+              </p>
+              
+              {/* Coin Particles Animation */}
+              {[...Array(25)].map((_, i) => (
+                <motion.span
+                  key={i}
+                  variants={coinVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  custom={i}
+                  className="absolute text-2xl"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    filter: `drop-shadow(0 0 5px rgba(255,215,0,0.5))`,
+                  }}
+                  transition={{
+                    delay: 0.5 + i * 0.05,
+                    duration: 1.5,
+                    ease: "easeOut"
+                  }}
+                >
+                  💰
+                </motion.span>
+              ))}
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-4xl mx-auto p-4 pb-20 lg:pb-4">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -164,7 +269,6 @@ export default function ShareExperiencePage() {
                   onChange={(e) => setFormData({...formData, company: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Google, Microsoft, Amazon..."
-                  required
                 />
               </div>
               <div>
@@ -175,7 +279,6 @@ export default function ShareExperiencePage() {
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   placeholder="Software Engineer, Data Scientist, Product Manager..."
-                  required
                 />
               </div>
               <div>
@@ -199,7 +302,6 @@ export default function ShareExperiencePage() {
                     onChange={(e) => setFormData({...formData, location: e.target.value})}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     placeholder="Bangalore, India"
-                    required
                   />
                 </div>
                 <div>
@@ -209,7 +311,6 @@ export default function ShareExperiencePage() {
                     value={formData.date}
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    required
                   />
                 </div>
               </div>
@@ -220,7 +321,7 @@ export default function ShareExperiencePage() {
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-navy-900 mb-4">Selection Rounds</h3>
+                <h3 className="text-lg font-medium text-navy-900 mb-4">Selection Rounds *</h3>
                 <p className="text-gray-600 mb-4">Select all the rounds you went through:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {roundOptions.map((round) => (
@@ -310,7 +411,7 @@ export default function ShareExperiencePage() {
           {currentStep === 4 && (
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-navy-900 mb-2">Preparation Tips</label>
+                <label className="block text-sm font-medium text-navy-900 mb-2">Preparation Tips *</label>
                 <textarea
                   value={formData.preparation_tips}
                   onChange={(e) => setFormData({...formData, preparation_tips: e.target.value})}
@@ -319,7 +420,7 @@ export default function ShareExperiencePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-navy-900 mb-2">Work Culture & Environment</label>
+                <label className="block text-sm font-medium text-navy-900 mb-2">Work Culture & Environment *</label>
                 <textarea
                   value={formData.work_culture}
                   onChange={(e) => setFormData({...formData, work_culture: e.target.value})}
@@ -340,7 +441,6 @@ export default function ShareExperiencePage() {
                   onChange={(e) => setFormData({...formData, overall_experience: e.target.value})}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 h-40"
                   placeholder="Write a comprehensive summary of your experience that will be helpful for others..."
-                  required
                 />
               </div>
               
