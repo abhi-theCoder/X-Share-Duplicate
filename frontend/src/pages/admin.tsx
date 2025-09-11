@@ -23,6 +23,9 @@ interface Submission {
   author: string;
   submittedAt: string;
   details: string;
+  // Add new optional fields to store who reviewed the submission and when
+  reviewedBy?: string;
+  reviewedAt?: string;
 }
 
 // Dummy data with more details and variety
@@ -59,6 +62,8 @@ const mockSubmissions: Submission[] = [
     submittedAt: '2025-08-23T12:45:00Z',
     details:
       'My summer internship experience as a Product Manager at Microsoft. The post covers the application process, product sense interviews, and the day-to-day responsibilities of a PM intern. This is a very helpful resource for aspiring PMs.',
+    reviewedBy: 'Admin User',
+    reviewedAt: '2025-08-23T13:00:00Z',
   },
   {
     id: '1756057137292',
@@ -70,6 +75,8 @@ const mockSubmissions: Submission[] = [
     submittedAt: '2025-08-22T09:15:00Z',
     details:
       'Rejected experience for a Senior Data Scientist role. The candidate shares feedback received from the recruiter about weaknesses in their machine learning system design skills. A good case study on what to avoid.',
+    reviewedBy: 'Admin User',
+    reviewedAt: '2025-08-22T09:30:00Z',
   },
   {
     id: '1756057137293',
@@ -81,6 +88,8 @@ const mockSubmissions: Submission[] = [
     submittedAt: '2025-08-21T16:00:00Z',
     details:
       'A great post about participating in and winning the TechTogether Hackathon. The team developed an accessibility tool for web browsers. Includes details on their tech stack and team dynamics.',
+    reviewedBy: 'Admin User',
+    reviewedAt: '2025-08-21T16:20:00Z',
   },
   {
     id: '1756057137294',
@@ -114,6 +123,8 @@ const mockSubmissions: Submission[] = [
     submittedAt: '2025-08-18T22:00:00Z',
     details:
       'A game submission that was rejected from the final round. The post details the reasons for rejection (performance issues and lack of originality) and serves as a learning experience for future hackathons.',
+    reviewedBy: 'Admin User',
+    reviewedAt: '2025-08-18T22:30:00Z',
   },
 ];
 
@@ -133,14 +144,33 @@ const Admin = () => {
   // Action handlers
   const handleApprove = (id: string) => {
     setSubmissions((prev) =>
-      prev.map((sub) => (sub.id === id ? { ...sub, status: 'approved' } : sub))
+      prev.map((sub) =>
+        sub.id === id
+          ? { ...sub, status: 'approved', reviewedBy: 'Admin User', reviewedAt: new Date().toISOString() }
+          : sub
+      )
     );
     setSelectedSubmission(null);
   };
 
   const handleReject = (id: string) => {
     setSubmissions((prev) =>
-      prev.map((sub) => (sub.id === id ? { ...sub, status: 'rejected' } : sub))
+      prev.map((sub) =>
+        sub.id === id
+          ? { ...sub, status: 'rejected', reviewedBy: 'Admin User', reviewedAt: new Date().toISOString() }
+          : sub
+      )
+    );
+    setSelectedSubmission(null);
+  };
+
+  const handleRevert = (id: string) => {
+    setSubmissions((prev) =>
+      prev.map((sub) =>
+        sub.id === id
+          ? { ...sub, status: 'pending', reviewedBy: undefined, reviewedAt: undefined }
+          : sub
+      )
     );
     setSelectedSubmission(null);
   };
@@ -270,6 +300,19 @@ const Admin = () => {
                     <span className="font-semibold">Submitted On:</span>{' '}
                     {new Date(selectedSubmission.submittedAt).toLocaleDateString()}
                   </p>
+                  {/* Display reviewedBy and reviewedAt fields if they exist */}
+                  {(selectedSubmission.status === 'approved' || selectedSubmission.status === 'rejected') && (
+                    <>
+                      <p>
+                        <span className="font-semibold">Reviewed By:</span>{' '}
+                        {selectedSubmission.reviewedBy}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Reviewed On:</span>{' '}
+                        {selectedSubmission.reviewedAt ? new Date(selectedSubmission.reviewedAt).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="border-t pt-4 border-gray-200">
                   <h3 className="text-lg font-bold mb-2 text-slate-700">Full Details</h3>
@@ -293,6 +336,15 @@ const Admin = () => {
                         <ThumbsDown className="w-5 h-5 mr-2" /> Reject
                       </button>
                     </>
+                  )}
+                  {/* Add a Revert button for approved or rejected submissions */}
+                  {(selectedSubmission.status === 'approved' || selectedSubmission.status === 'rejected') && (
+                    <button
+                      onClick={() => handleRevert(selectedSubmission.id)}
+                      className="flex-1 flex items-center justify-center px-6 py-3 bg-gray-500 text-white rounded-xl font-bold hover:bg-gray-600 transition-colors duration-200"
+                    >
+                      <XCircle className="w-5 h-5 mr-2" /> Revert to Pending
+                    </button>
                   )}
                   <button
                     onClick={() => handleEdit(selectedSubmission)}

@@ -12,7 +12,7 @@ import SignUp from './pages/SignUp';
 import Footer from './components/Footer';
 import ShareExperiencePage from './pages/Share-experience';
 import ExperienceDetail from './pages/ExperienceDetail';
-import Rewards from './pages/Rewards';
+import Rewards from './pages/rewards';
 import ResumeBuilder from './pages/resume-builder';
 import Admin from './pages/admin';
 import JobPortal from './pages/JobPortal';

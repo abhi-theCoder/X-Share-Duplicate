@@ -151,6 +151,7 @@ const Profile = () => {
         const profileRes = await axios.get('api/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
+        // console.log(profileRes)
         const userId = profileRes.data.id;
 
         const totalPoints = profileRes.data.stats.find((stat) => stat.label === 'Total Points')?.value || 0;
