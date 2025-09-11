@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import LoginRequired from '../components/LoginRequired';
+import axios from '../api';
+
 import {
   ThumbsUp,
   ThumbsDown,
@@ -127,8 +130,11 @@ const mockSubmissions: Submission[] = [
     reviewedAt: '2025-08-18T22:30:00Z',
   },
 ];
-
+    
 const Admin = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [hasAccess, setHasAccess] = useState(false); // New state variable for access control
   const [submissions, setSubmissions] = useState<Submission[]>(mockSubmissions);
   const [currentStatus, setCurrentStatus] = useState<Submission['status']>('pending');
   const [currentType, setCurrentType] = useState<Submission['type']>('interview');
@@ -141,12 +147,75 @@ const Admin = () => {
     (sub) => sub.status === currentStatus && sub.type === currentType
   );
 
+
+    useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('User not authenticated.');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch user profile from the API
+        const response = await axios.get('/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // Check the user's first name for access control
+        const { role } = response.data;
+        console.log(response)
+        if (role === 'admin') {
+          setHasAccess(true);
+        } else {
+          setHasAccess(false);
+          setError('Access Denied: You do not have permission to view this page.');
+        }
+
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+        setError('Failed to load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-lg text-slate-500">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // Handle different error states and restricted access
+  if (error === 'User not authenticated.') {
+    return <LoginRequired />;
+  }
+
+  if (error === 'Access Denied: You do not have permission to view this page.' || !hasAccess) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-red-50 text-red-700 p-8 text-center rounded-lg shadow-inner">
+        <div className="max-w-md mx-auto">
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+          <h1 className="text-3xl font-bold mb-2">Access Denied</h1>
+          <p className="text-lg">{error}</p>
+          <p className="mt-4 text-sm text-red-500">Please log in with an authorized account to continue.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Action handlers
   const handleApprove = (id: string) => {
     setSubmissions((prev) =>
       prev.map((sub) =>
         sub.id === id
-          ? { ...sub, status: 'approved', reviewedBy: 'Admin User', reviewedAt: new Date().toISOString() }
+          ? { ...sub, status: 'approved', reviewedBy: 'Abhishek', reviewedAt: new Date().toISOString() }
           : sub
       )
     );
@@ -157,7 +226,7 @@ const Admin = () => {
     setSubmissions((prev) =>
       prev.map((sub) =>
         sub.id === id
-          ? { ...sub, status: 'rejected', reviewedBy: 'Admin User', reviewedAt: new Date().toISOString() }
+          ? { ...sub, status: 'rejected', reviewedBy: 'Abhishek', reviewedAt: new Date().toISOString() }
           : sub
       )
     );
