@@ -5,6 +5,10 @@ import { Send, Search, ThumbsUp, MessageCircle, Clock, User, CheckCircle } from 
 const QAndA = () => {
   const [question, setQuestion] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  // State for new comment input
+  const [newCommentText, setNewCommentText] = useState('');
+  // State to manage comments for each question
+  const [questionComments, setQuestionComments] = useState({});
 
   const questions = [
     {
@@ -16,6 +20,7 @@ const QAndA = () => {
       answers: 3,
       isAnswered: true,
       tags: ['System Design', 'Interview'],
+      comments: [], // Initialize comments array
     },
     {
       id: 2,
@@ -26,6 +31,9 @@ const QAndA = () => {
       answers: 5,
       isAnswered: true,
       tags: ['React', 'Frontend'],
+      comments: [
+        { id: 'c1', author: 'Dev User', text: 'Check out the official React docs and their new beta features!' },
+      ],
     },
     {
       id: 3,
@@ -36,6 +44,7 @@ const QAndA = () => {
       answers: 7,
       isAnswered: true,
       tags: ['Salary', 'Career'],
+      comments: [],
     },
     {
       id: 4,
@@ -46,6 +55,7 @@ const QAndA = () => {
       answers: 0,
       isAnswered: false,
       tags: ['Career Transition', 'Industry'],
+      comments: [],
     },
   ];
 
@@ -56,8 +66,27 @@ const QAndA = () => {
     q.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Function to handle adding a comment
+  const handleAddComment = (questionId) => {
+    if (newCommentText.trim() === '') return; // Don't add empty comments
+
+    const updatedComments = {
+      ...questionComments,
+      [questionId]: [
+        ...(questionComments[questionId] || []),
+        {
+          id: Date.now(), // Simple unique ID
+          author: 'Current User', // Replace with actual logged-in user
+          text: newCommentText,
+        },
+      ],
+    };
+    setQuestionComments(updatedComments);
+    setNewCommentText(''); // Clear the input after adding
+  };
+
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -164,7 +193,7 @@ const QAndA = () => {
                     {q.question}
                   </h3>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-6">
                       <button className="flex items-center space-x-2 text-gray-500 hover:text-orange-500 transition-colors duration-200">
                         <ThumbsUp className="w-5 h-5" />
@@ -184,6 +213,46 @@ const QAndA = () => {
                           {tag}
                         </span>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Comments Section */}
+                  {q.comments.length > 0 || (questionComments[q.id] && questionComments[q.id].length > 0) ? (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <h4 className="text-md font-bold text-gray-700 mb-3">Comments</h4>
+                      {/* Display existing comments */}
+                      {q.comments.map(comment => (
+                        <div key={comment.id} className="mb-3 pb-3 border-b border-gray-50 last:border-b-0">
+                          <p className="text-gray-800 leading-relaxed">{comment.text}</p>
+                          <p className="text-xs text-gray-500 mt-1">- {comment.author}</p>
+                        </div>
+                      ))}
+                      {/* Display added comments */}
+                      {questionComments[q.id] && questionComments[q.id].map(comment => (
+                        <div key={comment.id} className="mb-3 pb-3 border-b border-gray-50 last:border-b-0">
+                          <p className="text-gray-800 leading-relaxed">{comment.text}</p>
+                          <p className="text-xs text-gray-500 mt-1">- {comment.author}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {/* Comment Input */}
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <h4 className="text-md font-bold text-gray-700 mb-3">Add a Comment</h4>
+                    <textarea
+                      value={newCommentText}
+                      onChange={(e) => setNewCommentText(e.target.value)}
+                      placeholder="Share your thoughts..."
+                      className="w-full h-24 p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => handleAddComment(q.id)}
+                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
+                      >
+                        Post Comment
+                      </button>
                     </div>
                   </div>
                 </motion.div>

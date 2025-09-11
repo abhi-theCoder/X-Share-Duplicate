@@ -14,6 +14,8 @@ import ShareExperiencePage from './pages/Share-experience';
 import ExperienceDetail from './pages/ExperienceDetail';
 import Rewards from './pages/Rewards';
 import ResumeBuilder from './pages/resume-builder';
+import Admin from './pages/admin';
+import JobPortal from './pages/JobPortal';
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
             <Route path="/rewards" element={<Rewards/>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/jobs" element={<JobPortal />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
         </main>
         <Footer/>

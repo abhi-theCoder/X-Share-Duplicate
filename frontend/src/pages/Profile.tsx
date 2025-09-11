@@ -415,6 +415,28 @@ const Profile = () => {
                 <Edit3 className="w-4 h-4 mr-2" /> Build Your Resume
               </Link>
             </motion.div>
+
+            {/* Resume Builder Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 mt-5"
+            >
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <FileText className="w-6 h-6 mr-2 text-blue-500" />
+                Job Finder
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Create and manage your professional resume with our easy-to-use builder.
+              </p>
+              <Link
+                to="/jobs"
+                className="w-full flex items-center justify-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
+              >
+                View Jobs
+              </Link>
+            </motion.div>
           </div>
 
           {/* Main Content */}
