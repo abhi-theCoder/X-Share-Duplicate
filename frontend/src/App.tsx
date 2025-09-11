@@ -12,6 +12,8 @@ import SignUp from './pages/SignUp';
 import Footer from './components/Footer';
 import ShareExperiencePage from './pages/Share-experience';
 import ExperienceDetail from './pages/ExperienceDetail';
+import Rewards from './pages/Rewards';
+import ResumeBuilder from './pages/resume-builder';
 
 function App() {
   return (
@@ -27,7 +29,9 @@ function App() {
             <Route path="/qa" element={<QAndA />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/resume-builder" element={<ResumeBuilder/>} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/rewards" element={<Rewards/>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
           </Routes>

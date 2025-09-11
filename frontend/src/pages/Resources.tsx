@@ -1,14 +1,38 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Download, Star, Eye, Calendar, User, FileText, Video, Link } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Download, Star, Calendar, User, FileText, Video } from 'lucide-react';
 
+// Star Rating Component for the popup
+const RatingStars = ({ rating, onRate }) => {
+  const [hoveredRating, setHoveredRating] = useState(0);
+
+  return (
+    <div className="flex space-x-1">
+      {[1, 2, 3, 4, 5].map(starValue => (
+        <Star
+          key={starValue}
+          className={`w-6 h-6 cursor-pointer transition-colors duration-200 ${
+            (hoveredRating || rating) >= starValue ? 'text-yellow-500 fill-current' : 'text-gray-300'
+          }`}
+          onMouseEnter={() => setHoveredRating(starValue)}
+          onMouseLeave={() => setHoveredRating(0)}
+          onClick={() => onRate(starValue)}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Main Resources Component
 const Resources = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('All');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedResource, setSelectedResource] = useState(null);
 
   const resourceTypes = ['All', 'Interview Questions', 'Coding Challenges', 'Resume Templates', 'Video Tutorials'];
 
-  const resources = [
+  const [resources, setResources] = useState([
     {
       id: 1,
       title: 'System Design Interview Questions - FAANG Companies',
@@ -19,7 +43,6 @@ const Resources = () => {
       format: 'PDF',
       downloads: 1240,
       rating: 4.8,
-      views: 3200,
       uploadedAt: '1 week ago',
       icon: FileText,
     },
@@ -33,7 +56,6 @@ const Resources = () => {
       format: 'Document',
       downloads: 890,
       rating: 4.9,
-      views: 2100,
       uploadedAt: '3 days ago',
       icon: FileText,
     },
@@ -47,7 +69,6 @@ const Resources = () => {
       format: 'DOCX',
       downloads: 2100,
       rating: 4.7,
-      views: 5400,
       uploadedAt: '5 days ago',
       icon: FileText,
     },
@@ -61,11 +82,10 @@ const Resources = () => {
       format: 'Video',
       downloads: 650,
       rating: 4.9,
-      views: 1800,
       uploadedAt: '1 week ago',
       icon: Video,
     },
-  ];
+  ]);
 
   const filteredResources = resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,6 +93,27 @@ const Resources = () => {
     const matchesType = selectedType === 'All' || resource.type === selectedType;
     return matchesSearch && matchesType;
   });
+  
+  const openRatingModal = (resource) => {
+    setSelectedResource(resource);
+    setIsModalOpen(true);
+  };
+  
+  const closeRatingModal = () => {
+    setIsModalOpen(false);
+    setSelectedResource(null);
+  };
+
+  const handleRate = (newRating) => {
+    if (selectedResource) {
+      // In a real application, you would make an API call here to update the rating on the server
+      const updatedResources = resources.map(resource => 
+        resource.id === selectedResource.id ? { ...resource, rating: newRating } : resource
+      );
+      setResources(updatedResources);
+    }
+    closeRatingModal();
+  };
 
   return (
     <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
@@ -213,10 +254,14 @@ const Resources = () => {
                           <Download className="w-4 h-4" />
                           <span>{resource.downloads}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <Eye className="w-4 h-4" />
-                          <span>{resource.views}</span>
-                        </div>
+                        {/* New Rate button */}
+                        <button 
+                          onClick={() => openRatingModal(resource)}
+                          className="flex items-center space-x-1 text-orange-500 hover:text-orange-600 transition-colors duration-200 font-medium"
+                        >
+                          <Star className="w-4 h-4" />
+                          <span>Rate this resource</span>
+                        </button>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
@@ -234,6 +279,44 @@ const Resources = () => {
           </div>
         </div>
       </div>
+
+      {/* Rating Pop-up Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+            onClick={closeRatingModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 50, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 50, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Rate this Resource</h2>
+              <p className="text-center text-gray-600 mb-6">
+                {selectedResource?.title}
+              </p>
+              <div className="flex justify-center mb-6">
+                <RatingStars rating={selectedResource?.rating || 0} onRate={handleRate} />
+              </div>
+              <button
+                onClick={closeRatingModal}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

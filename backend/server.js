@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth.js');
 const experienceRoutes = require('./routes/experience.js');
 const profileRoutes = require('./routes/profile.js');
+const bookmarks = require('./routes/bookmark.js');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/experiences', experienceRoutes);
 app.use('/api/profile',profileRoutes);
+app.use('/api/bookmarks', bookmarks);
 
 // A simple welcome route to confirm the server is running
 app.get('/', (req, res) => {

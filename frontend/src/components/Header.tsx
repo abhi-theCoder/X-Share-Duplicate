@@ -1,24 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut } from 'lucide-react';
+import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from '../api'; // Import axios
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userPoints, setUserPoints] = useState(null);
+  const [isPointsDropdownOpen, setIsPointsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Example: check if token exists in localStorage
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
-  }, [location]); // re-check on route change
+
+    const fetchUserPoints = async () => {
+      if (!token) {
+        setUserPoints(null);
+        return;
+      }
+
+      try {
+        const response = await axios.get('/api/profile', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        setUserPoints(response.data.points);
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+        setUserPoints(null);
+      }
+    };
+
+    fetchUserPoints();
+  }, [location]);
+
+  // Handle clicks outside the points dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsPointsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   const handleLogout = () => {
     localStorage.clear();
     setIsLoggedIn(false);
-    navigate('/login'); // redirect to login
+    setUserPoints(null);
+    navigate('/login');
   };
 
   const navigation = [
@@ -95,13 +135,45 @@ const Header = () => {
                 </Link>
               </>
             ) : (
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
+              <>
+                {userPoints !== null && (
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setIsPointsDropdownOpen(!isPointsDropdownOpen)}
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200 rounded-lg hover:bg-orange-50"
+                    >
+                      <Award className="w-5 h-5" />
+                      <span>{userPoints}</span>
+                    </button>
+                    <AnimatePresence>
+                      {isPointsDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100"
+                        >
+                          <Link
+                            to="/rewards"
+                            onClick={() => setIsPointsDropdownOpen(false)}
+                            className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                          >
+                            <Trophy className="w-4 h-4" />
+                            <span>Rewards</span>
+                          </Link>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </>
             )}
           </div>
 
@@ -164,16 +236,48 @@ const Header = () => {
                       </Link>
                     </>
                   ) : (
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Logout</span>
-                    </button>
+                    <>
+                      {userPoints !== null && (
+                        <div className="relative">
+                          <button
+                            onClick={() => setIsPointsDropdownOpen(!isPointsDropdownOpen)}
+                            className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200 rounded-lg hover:bg-orange-50"
+                          >
+                            <Award className="w-5 h-5" />
+                            <span>{userPoints} Points</span>
+                          </button>
+                          <AnimatePresence>
+                            {isPointsDropdownOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="mt-2 w-full bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100"
+                              >
+                                <Link
+                                  to="/rewards"
+                                  onClick={() => { setIsPointsDropdownOpen(false); setIsMenuOpen(false); }}
+                                  className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                                >
+                                  <Trophy className="w-4 h-4" />
+                                  <span>Rewards</span>
+                                </Link>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Logout</span>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

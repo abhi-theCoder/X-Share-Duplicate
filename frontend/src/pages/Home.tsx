@@ -60,7 +60,11 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 to="/signup"
-                className="px-8 py-4 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-semibold text-lg hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
+                className="px-8 py-4 text-white bg-gradient-to-r from-[#FF914D] to-[#3CB371] shadow-lg disabled:opacity-50 text-white rounded-xl font-semibold text-lg
+                  hover:from-[#E67E22] hover:to-[#2E8B57]
+                  hover:transform hover:scale-105 hover:-translate-y-1
+                  hover:shadow-2xl hover:shadow-inner-glow
+                  transition-all duration-300 ease-in-out"
               >
                 Start Your Journey
                 <ArrowRight className="inline w-5 h-5 ml-2" />

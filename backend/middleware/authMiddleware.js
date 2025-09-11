@@ -19,7 +19,7 @@ const authenticateToken = (req, res, next) => {
       next();
     } catch (error) {
       console.error('JWT verification error:', error);
-      res.status(401).json({ message: 'Invalid or expired token' });
+      res.status(401).json({ message: 'Invalid or expired token. Please re-login' });
     }
   }
 

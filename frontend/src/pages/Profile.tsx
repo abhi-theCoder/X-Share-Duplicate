@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
-  User, Mail, MapPin, Building, Calendar, Edit3, Star, Trophy,
-  BookOpen, MessageCircle, Heart, Upload, Save, X, LogOut, HeartHandshake, Users, ThumbsUp
+  User, Mail, MapPin, Building, Calendar, Edit3, Star, Trophy, Clock,
+  BookOpen, MessageCircle, Heart, Upload, Save, X, LogOut, HeartHandshake, Users, ThumbsUp, Bookmark, FileText,
 } from 'lucide-react';
 import LoginRequired from '../components/LoginRequired';
+import ActivityHeatmap from '../components/ActivityHeatmap';
 import axios from '../api';
 
-// ✅ Icon map
-const iconMap: Record<string, React.ComponentType<any>> = {
+// ✅ Icon map (unchanged)
+const iconMap = {
   User,
   Mail,
   MapPin,
@@ -26,14 +28,107 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   LogOut,
   HeartHandshake,
   Users,
-  ThumbsUp
+  ThumbsUp,
+  Bookmark,
+  FileText
+};
+
+// Interface for a full Experience object
+interface Experience {
+  id: number;
+  role: string;
+  company: string;
+  location: string;
+  upvotes: number;
+  comments_count: number;
+  overall_experience: string;
+  created_at: string;
+  users: { name: string };
+  type: string;
+}
+
+// Helper function to format date
+const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return 'Date not available';
+  const date = new Date(dateString);
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+};
+
+// Colors for dynamic avatars
+const colors = ['#FF5733', '#33FF57', '#3357FF', '#F0A500', '#25B7D9', '#E63946', '#2A9D8F'];
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+};
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const parts = name.split(' ');
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return parts[0][0].toUpperCase();
+};
+
+const calculateLevelAndProgress = (points) => {
+  const levels = [
+    { name: 'Beginner', icon: 'User', minPoints: 0, maxPoints: 199 },
+    { name: 'Intermediate', icon: 'Edit3', minPoints: 200, maxPoints: 499 },
+    { name: 'Wood', icon: 'BookOpen', minPoints: 500, maxPoints: 799 },
+    { name: 'Stone', icon: 'MessageCircle', minPoints: 800, maxPoints: 1499 },
+    { name: 'Bronze', icon: 'Trophy', minPoints: 1500, maxPoints: 1999 },
+    { name: 'Silver', icon: 'Trophy', minPoints: 2000, maxPoints: 2499 },
+    { name: 'Gold', icon: 'Trophy', minPoints: 2500, maxPoints: 3499 },
+    { name: 'Platinum', icon: 'Trophy', minPoints: 3500, maxPoints: 4499 },
+    { name: 'Diamond', icon: 'Star', minPoints: 4500, maxPoints: 5999 },
+    { name: 'Elite', icon: 'ThumbsUp', minPoints: 6000, maxPoints: 7999 },
+    { name: 'Legendary', icon: 'HeartHandshake', minPoints: 8000, maxPoints: 9999 },
+    { name: 'Mythic', icon: 'Users', minPoints: 10000, maxPoints: 14999 },
+    { name: 'Ultimate', icon: 'Star', minPoints: 15000, maxPoints: Infinity }
+  ];
+
+  let currentLevel = levels[0];
+  let nextLevel = null;
+  let progress = 0;
+
+  for (let i = 0; i < levels.length; i++) {
+    if (points >= levels[i].minPoints && points <= levels[i].maxPoints) {
+      currentLevel = levels[i];
+      if (levels[i].maxPoints !== Infinity) {
+        progress = ((points - levels[i].minPoints) / (levels[i].maxPoints - levels[i].minPoints)) * 100;
+        nextLevel = levels[i + 1];
+      } else {
+        progress = 100;
+      }
+      break;
+    }
+  }
+
+  const progressText = nextLevel
+    ? `You need ${nextLevel.minPoints - points} more points to reach ${nextLevel.name}!`
+    : "You've reached the highest level! 🏆";
+
+  return {
+    name: currentLevel.name,
+    icon: currentLevel.icon,
+    percentage: Math.min(100, Math.max(0, Math.floor(progress))),
+    progressText: progressText,
+    remaining: nextLevel ? `${points} / ${nextLevel.minPoints}` : `${points} / ∞`
+  };
 };
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
+  const [bookmarks, setBookmarks] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activityData, setActivityData] = useState([]);
   const [formData, setFormData] = useState({
     name: '',
     role: '',
@@ -43,7 +138,7 @@ const Profile = () => {
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndBookmarks = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -52,27 +147,43 @@ const Profile = () => {
           return;
         }
 
-        const response = await axios.get('api/profile', {
+        // Fetch Profile
+        const profileRes = await axios.get('api/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log(response)
-        setProfileData(response.data);
-        setFormData({
-          name: response.data.name,
-          role: response.data.role,
-          company: response.data.company,
-          location: response.data.location,
-          bio: response.data.bio
+        const userId = profileRes.data.id;
+
+        const totalPoints = profileRes.data.stats.find((stat) => stat.label === 'Total Points')?.value || 0;
+        const levelData = calculateLevelAndProgress(totalPoints);
+        
+        setProfileData({
+          ...profileRes.data,
+          level: levelData
         });
+        
+        setFormData({
+          name: profileRes.data.name,
+          role: profileRes.data.role,
+          company: profileRes.data.company,
+          location: profileRes.data.location,
+          bio: profileRes.data.bio
+        });
+
+        // Fetch Bookmarks (full experience objects)
+        const bookmarksRes = await axios.get(`/api/bookmarks/${userId}/experiences`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBookmarks(bookmarksRes.data);
+
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
+        console.error('Failed to fetch profile/bookmarks:', err);
         setError('Failed to load profile data.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchProfileAndBookmarks();
   }, []);
 
   const handleSave = async () => {
@@ -81,7 +192,7 @@ const Profile = () => {
       await axios.put('api/profile', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setProfileData((prev: any) => ({ ...prev, ...formData }));
+      setProfileData((prev) => ({ ...prev, ...formData }));
       setIsEditing(false);
     } catch (err) {
       console.error('Failed to update profile:', err);
@@ -100,8 +211,35 @@ const Profile = () => {
     setIsEditing(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleRemoveBookmark = async (experienceId, event) => {
+    event.stopPropagation(); // Prevents the link from navigating
+    event.preventDefault(); // Prevents default link behavior
+
+    const userId = profileData.id;
+    if (!userId) {
+      setError('User not authenticated.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete('/api/bookmarks', {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { userId, experienceId }
+      });
+
+      // Update the state to remove the bookmark from the UI
+      setBookmarks(prevBookmarks => prevBookmarks.filter(bookmark => bookmark.id !== experienceId));
+      console.log(`Bookmark ${experienceId} removed successfully.`);
+
+    } catch (err) {
+      console.error('Failed to remove bookmark:', err);
+      setError('Failed to remove bookmark.');
+    }
   };
 
   if (loading) {
@@ -133,9 +271,8 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-end mb-6">{/* Logout button */}</div>
         <div className="grid lg:grid-cols-3 gap-8">
 
           {/* Profile Info */}
@@ -146,11 +283,10 @@ const Profile = () => {
               transition={{ duration: 0.8 }}
               className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 mb-6"
             >
-              {/* Avatar + Profile Card */}
               <div className="text-center mb-6">
                 <div className="relative inline-block">
                   <img
-                    src={profileData.avatar || 'https://placehold.co/96x96/e5e7eb/4b5563?text=User'}
+                    src={profileData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${profileData.name}&backgroundColor=000000,ffffff&fontFamily=Arial&radius=50`}
                     alt={profileData.name}
                     className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-orange-200"
                   />
@@ -196,76 +332,60 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Name */}
-                  <div className="space-y-1">
-                    <label htmlFor="name" className="text-sm font-medium text-gray-700">Name</label>
+                  <div className="flex items-center space-x-3 text-gray-600">
+                    <User className="w-5 h-5" />
                     <input
                       type="text"
-                      id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                      placeholder="Your Name"
+                      className="w-full p-2 border rounded-md"
                     />
                   </div>
-                  {/* Role */}
-                  <div className="space-y-1">
-                    <label htmlFor="role" className="text-sm font-medium text-gray-700">Role</label>
+                  <div className="flex items-center space-x-3 text-gray-600">
+                    <Building className="w-5 h-5" />
                     <input
                       type="text"
-                      id="role"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
-                    />
-                  </div>
-                  {/* Company */}
-                  <div className="space-y-1">
-                    <label htmlFor="company" className="text-sm font-medium text-gray-700">Company</label>
-                    <input
-                      type="text"
-                      id="company"
                       name="company"
                       value={formData.company}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                      placeholder="Your Company"
+                      className="w-full p-2 border rounded-md"
                     />
                   </div>
-                  {/* Location */}
-                  <div className="space-y-1">
-                    <label htmlFor="location" className="text-sm font-medium text-gray-700">Location</label>
+                  <div className="flex items-center space-x-3 text-gray-600">
+                    <MapPin className="w-5 h-5" />
                     <input
                       type="text"
-                      id="location"
                       name="location"
                       value={formData.location}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
+                      placeholder="Your Location"
+                      className="w-full p-2 border rounded-md"
                     />
                   </div>
-                  {/* Bio */}
-                  <div className="space-y-1">
-                    <label htmlFor="bio" className="text-sm font-medium text-gray-700">Bio</label>
+                  <div className="flex items-center space-x-3 text-gray-600">
+                    <BookOpen className="w-5 h-5" />
                     <textarea
-                      id="bio"
                       name="bio"
                       value={formData.bio}
                       onChange={handleChange}
+                      placeholder="Your Bio"
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
-                    ></textarea>
+                      className="w-full p-2 border rounded-md"
+                    />
                   </div>
-                  <div className="flex space-x-4 pt-2">
+                  <div className="flex justify-between space-x-2">
                     <button
                       onClick={handleSave}
-                      className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200"
+                      className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-medium hover:from-green-600 hover:to-teal-700 transform hover:scale-105 transition-all duration-200"
                     >
                       <Save className="w-4 h-4 mr-2" /> Save Changes
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-100 transition-colors duration-200"
+                      className="w-full flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-800 rounded-xl font-medium hover:bg-gray-400 transform hover:scale-105 transition-all duration-200"
                     >
                       <X className="w-4 h-4 mr-2" /> Cancel
                     </button>
@@ -274,7 +394,7 @@ const Profile = () => {
               )}
             </motion.div>
 
-            {/* Achievements */}
+            {/* Resume Builder Section */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -282,29 +402,18 @@ const Profile = () => {
               className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
             >
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <Trophy className="w-6 h-6 mr-2 text-orange-500" />
-                Achievements
+                <FileText className="w-6 h-6 mr-2 text-blue-500" />
+                Resume Builder
               </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {profileData.achievements?.map((achievement: any, index: number) => {
-                  const IconComponent = iconMap[achievement.icon] || User;
-                  return (
-                    <div
-                      key={index}
-                      className={`p-3 rounded-xl border-2 transition-all duration-200 ${
-                        achievement.earned
-                          ? 'border-green-200 bg-green-50'
-                          : 'border-gray-200 bg-gray-50 opacity-60'
-                      }`}
-                    >
-                      <IconComponent className={`w-6 h-6 mb-2 ${achievement.earned ? 'text-green-600' : 'text-gray-400'}`} />
-                      <h4 className={`font-medium text-sm ${achievement.earned ? 'text-gray-800' : 'text-gray-500'}`}>
-                        {achievement?.title || "Untitled"}
-                      </h4>
-                    </div>
-                  );
-                })}
-              </div>
+              <p className="text-gray-600 mb-4">
+                Create and manage your professional resume with our easy-to-use builder.
+              </p>
+              <Link
+                to="/resume-builder"
+                className="w-full flex items-center justify-center px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-indigo-700 transition-all duration-200"
+              >
+                <Edit3 className="w-4 h-4 mr-2" /> Build Your Resume
+              </Link>
             </motion.div>
           </div>
 
@@ -317,7 +426,7 @@ const Profile = () => {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
-              {profileData.stats?.map((stat: any) => {
+              {profileData.stats?.map((stat) => {
                 const IconComponent = iconMap[stat.icon] || User;
                 return (
                   <div
@@ -334,6 +443,16 @@ const Profile = () => {
               })}
             </motion.div>
 
+              {/* --- INSERT THE HEATMAP HERE --- */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.35 }}
+              className="mb-8"
+            >
+              <ActivityHeatmap activityData={activityData} />
+            </motion.div>
+
             {/* Recent Activity */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -343,7 +462,7 @@ const Profile = () => {
             >
               <h3 className="text-xl font-bold text-gray-800 mb-6">Recent Activity</h3>
               <div className="space-y-4">
-                {profileData.recentActivity?.map((activity: any) => {
+                {profileData.recentActivity?.map((activity) => {
                   const IconComponent = iconMap[activity?.icon] || User;
                   return (
                     <div
@@ -374,7 +493,36 @@ const Profile = () => {
               </div>
             </motion.div>
 
-            {/* Level Progress (✅ dynamic now) */}
+            {/* Bookmarks Section with Call to Action */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.25 }}
+              className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 mb-8 flex flex-col items-start"
+            >
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <Bookmark className="w-6 h-6 mr-2 text-orange-500" />
+                Bookmarked Experiences
+              </h3>
+              <p className="text-gray-600 mb-4">
+                You have {bookmarks.length} saved experiences.
+              </p>
+              {bookmarks.length > 0 && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-6 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
+                >
+                  View All Bookmarks
+                </button>
+              )}
+              {bookmarks.length === 0 && (
+                <p className="text-gray-500">
+                  No bookmarks yet. Start saving experiences you find interesting!
+                </p>
+              )}
+            </motion.div>
+
+            {/* Level Progress */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -415,6 +563,93 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Bookmarks Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm p-4 overflow-y-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 50 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative border border-gray-100"
+            >
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                <Bookmark className="w-8 h-8 mr-3 text-orange-500" />
+                Your Bookmarks
+              </h2>
+              {bookmarks.length > 0 ? (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {bookmarks.map(exp => (
+                    <Link key={exp.id} to={`/experiences/${exp.id}`}>
+                      <motion.div
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        className="p-5 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+                      >
+                        <div className="flex items-center mb-3">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg mr-3"
+                            style={{ backgroundColor: stringToColor(exp.users?.name || String(exp.id)) }}
+                          >
+                            {getInitials(exp.users?.name || `User ${exp.id}`)}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-800">{exp.users?.name || `User ${exp.id}`}</h4>
+                            <p className="text-sm text-gray-500">{exp.role || "Experience"}</p>
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2">
+                          {exp.role} at {exp.company}
+                        </h3>
+                        <p className="text-gray-600 text-sm line-clamp-3">
+                          {exp.overall_experience || 'No experience summary provided.'}
+                        </p>
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Clock className="w-3 h-3 mr-1" />
+                            <span>{formatDate(exp.created_at)}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1 text-sm text-gray-500">
+                              <ThumbsUp className="w-4 h-4" />
+                              <span>{exp.upvotes}</span>
+                            </div>
+                            <div className="flex items-center space-x-1 text-sm text-gray-500">
+                              <MessageCircle className="w-4 h-4" />
+                              <span>{exp.comments_count}</span>
+                            </div>
+                            <button
+                              onClick={(e) => handleRemoveBookmark(exp.id, e)}
+                              className="text-red-500 hover:text-red-700 transition-colors duration-200 text-sm font-medium flex items-center space-x-1"
+                            >
+                              <X className="w-4 h-4" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">You have no bookmarked experiences.</p>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

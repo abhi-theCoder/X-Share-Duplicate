@@ -20,7 +20,7 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'student' | 'senior';
+  role: 'student' | 'alumni';
   company: string;
   location: string;
 }
@@ -80,8 +80,8 @@ const SignUp: React.FC = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        company: formData.role === 'senior' ? formData.company : null,
-        location: formData.role === 'senior' ? formData.location : null,
+        company: formData.role === 'alumni' ? formData.company : null,
+        location: formData.role === 'alumni' ? formData.location : null,
       });
 
       console.log('Registration successful:', response.data);
@@ -206,7 +206,7 @@ const SignUp: React.FC = () => {
               I am a
             </label>
             <div className="grid grid-cols-2 gap-4">
-              {(['student', 'senior'] as const).map((role) => (
+              {(['student', 'alumni'] as const).map((role) => (
                 <button
                   key={role}
                   type="button"
@@ -285,8 +285,8 @@ const SignUp: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Company + Location (for seniors only) */}
-            {formData.role === 'senior' && (
+            {/* Company + Location (for alumnis only) */}
+            {formData.role === 'alumni' && (
               <>
                 {/* Company */}
                 <motion.div
@@ -442,7 +442,11 @@ const SignUp: React.FC = () => {
               transition={{ duration: 0.6, delay: 1.1 }}
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full flex items-center justify-center px-6 py-3 text-white bg-gradient-to-r from-[#FF914D] to-[#3CB371] shadow-lg disabled:opacity-50 text-white rounded-xl font-semibold text-lg
+                hover:from-[#E67E22] hover:to-[#2E8B57]
+                hover:transform hover:scale-105 hover:-translate-y-1
+                hover:shadow-2xl hover:shadow-inner-glow
+                transition-all duration-300 ease-in-out transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />

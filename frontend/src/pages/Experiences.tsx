@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Search, Filter, MessageCircle, Share2, Clock, Building, MapPin, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Search, Filter, MessageCircle, Share2, Clock, Building, MapPin, ThumbsUp, ThumbsDown, Bookmark } from 'lucide-react';
 import axios from '../api';
 
 interface Experience {
@@ -18,7 +18,6 @@ interface Experience {
   overall_experience?: string;
   preparation_tips?: string;
   work_culture?: string;
-  // Assumed new field from backend to indicate current user's vote
   userVote?: 'upvote' | 'downvote' | null;
 }
 
@@ -62,15 +61,16 @@ const Experiences: React.FC = () => {
   // State to manage user's votes based on backend data
   const [userVotes, setUserVotes] = useState<Record<number, 'upvote' | 'downvote' | null>>({});
 
+  // New state to track bookmarked experiences
+  const [bookmarkedExperiences, setBookmarkedExperiences] = useState<Set<number>>(new Set());
+
   const categories = ['All', 'internship', 'job', 'hackathon', 'other'];
 
   const fetchExperiences = async () => {
     try {
-      // We assume the backend now includes a userVote field in the response
       const response = await axios.get<Experience[]>('/api/experiences');
       const experiencesData = response.data;
-
-      // Initialize the userVotes state based on the fetched data
+      
       const initialVotes = experiencesData.reduce((acc, exp) => {
         if (exp.userVote) {
           acc[exp.id] = exp.userVote;
@@ -89,8 +89,25 @@ const Experiences: React.FC = () => {
     }
   };
 
+  const fetchBookmarks = async () => {
+    try {
+      // The backend should return an array of bookmarked experience IDs for the current user
+      const response = await axios.get<{ experienceId: number }[]>(`/api/bookmarks/${currentUserId}`,{
+        headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+      },
+      });
+      const bookmarkedIds = new Set(response.data.map(b => b.experienceId));
+      setBookmarkedExperiences(bookmarkedIds);
+    } catch (err) {
+      console.error('Failed to fetch bookmarks:', err);
+      // Not critical to show an error, but log it
+    }
+  };
+
   useEffect(() => {
     fetchExperiences();
+    fetchBookmarks();
   }, []);
 
   const handleVote = async (e: React.MouseEvent<HTMLButtonElement>, experienceId: number, voteType: 'upvote' | 'downvote') => {
@@ -100,20 +117,17 @@ const Experiences: React.FC = () => {
     const currentVote = userVotes[experienceId];
     let newVoteType: 'upvote' | 'downvote' | null = voteType;
 
-    // Check if the user is un-voting or changing their vote
     if (currentVote === voteType) {
-      newVoteType = null; // Un-vote
+      newVoteType = null;
     } else {
-      newVoteType = voteType; // New vote or changing vote
+      newVoteType = voteType;
     }
 
-    // Optimistically update the UI
     setExperiences(prevExperiences => prevExperiences.map(exp => {
       if (exp.id === experienceId) {
         const upvotes = exp.upvotes || 0;
         const downvotes = exp.downvotes || 0;
 
-        // Adjust counts based on the new vote action
         if (newVoteType === 'upvote') {
           return {
             ...exp,
@@ -128,7 +142,7 @@ const Experiences: React.FC = () => {
             downvotes: downvotes + (currentVote !== 'downvote' ? 1 : 0),
             userVote: newVoteType
           };
-        } else { // Un-vote
+        } else {
           return {
             ...exp,
             upvotes: currentVote === 'upvote' ? upvotes - 1 : upvotes,
@@ -140,13 +154,11 @@ const Experiences: React.FC = () => {
       return exp;
     }));
 
-    // Update local user votes state
     setUserVotes(prevVotes => ({
       ...prevVotes,
       [experienceId]: newVoteType,
     }));
     
-    // Send the vote to the backend
     try {
       await axios.post(`/api/experiences/${experienceId}/vote`, {
         userId: currentUserId,
@@ -154,8 +166,50 @@ const Experiences: React.FC = () => {
       });
     } catch (err) {
       console.error('Failed to submit vote:', err);
-      // Revert the state changes on failure by refetching data
       fetchExperiences();
+    }
+  };
+
+  // New function to handle bookmarking
+  const handleBookmark = async (e: React.MouseEvent<HTMLButtonElement>, experienceId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isBookmarked = bookmarkedExperiences.has(experienceId);
+    
+    // Optimistically update the UI
+    const newBookmarks = new Set(bookmarkedExperiences);
+    if (isBookmarked) {
+      newBookmarks.delete(experienceId);
+    } else {
+      newBookmarks.add(experienceId);
+    }
+    setBookmarkedExperiences(newBookmarks);
+
+    // Send the request to the backend
+    try {
+      if (isBookmarked) {
+        // Corrected DELETE request
+        await axios.delete(`/api/bookmarks`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}` 
+          },
+          data: { // Data for DELETE must be in the 'data' property
+            userId: currentUserId,
+            experienceId
+          }
+        });
+      } else {
+        await axios.post(`/api/bookmarks`, { userId: currentUserId, experienceId }, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update bookmark:', err);
+      // Revert the state on failure
+      setBookmarkedExperiences(bookmarkedExperiences);
     }
   };
 
@@ -313,6 +367,13 @@ const Experiences: React.FC = () => {
                           <MessageCircle className="w-5 h-5" />
                           <span>{experience.comments_count}</span>
                         </div>
+                        {/* New Bookmark button */}
+                        <button
+                          onClick={(e) => handleBookmark(e, experience.id)}
+                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${bookmarkedExperiences.has(experience.id) ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                        >
+                          <Bookmark className={`w-5 h-5 ${bookmarkedExperiences.has(experience.id) ? 'fill-current' : ''}`} />
+                        </button>
                       </div>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
@@ -347,7 +408,11 @@ const Experiences: React.FC = () => {
               Help the next generation by sharing your career journey, challenges, and insights.
             </p>
             <Link to="/share-experience">
-              <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+              <button className="px-8 py-4 text-white bg-gradient-to-r from-[#FF914D] to-[#3CB371] shadow-lg disabled:opacity-50 text-white rounded-xl font-semibold text-lg
+                hover:from-[#E67E22] hover:to-[#2E8B57]
+                hover:transform hover:scale-105 hover:-translate-y-1
+                hover:shadow-2xl hover:shadow-inner-glow
+                transition-all duration-300 ease-in-out">
                 Share Your Story
               </button>
             </Link>
