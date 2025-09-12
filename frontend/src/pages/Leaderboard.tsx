@@ -23,7 +23,7 @@ const Leaderboard = () => {
     { id: 5, name: 'Rohit Mehta', points: 1520, contributions: 24, level: 'Bronze', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150' },
   ];
 
-  const Alumni: LeaderboardUser[] = [
+  const WorkingProfessional: LeaderboardUser[] = [
     { id: 1, name: 'Dr. Rajesh Kumar', points: 3800, contributions: 89, level: 'Platinum', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150', company: 'Google' },
     { id: 2, name: 'Sunita Agarwal', points: 3650, contributions: 76, level: 'Platinum', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150', company: 'Microsoft' },
     { id: 3, name: 'Karan Malhotra', points: 3200, contributions: 62, level: 'Gold', avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150', company: 'Amazon' },
@@ -57,7 +57,7 @@ const Leaderboard = () => {
     }
   };
 
-  const currentData = activeTab === 'students' ? students : Alumni;
+  const currentData = activeTab === 'students' ? students : WorkingProfessional;
 
   return (
     <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
@@ -86,7 +86,7 @@ const Leaderboard = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex bg-white rounded-2xl shadow-lg p-2 mb-6 border border-gray-100"
             >
-              {['students', 'Alumni'].map((tab) => (
+              {['students', 'Working Professional'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -143,7 +143,7 @@ const Leaderboard = () => {
                               {user.level}
                             </div>
                           </div>
-                          {activeTab === 'Alumni' && (
+                          {activeTab === 'WorkingProfessional' && (
                             <p className="text-sm text-gray-500 mt-1">{user.company}</p>
                           )}
                           <p className="text-sm text-gray-500">{user.contributions} contributions</p>

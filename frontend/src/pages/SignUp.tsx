@@ -20,7 +20,7 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: 'student' | 'alumni';
+  role: 'student' | 'Working professional';
   company: string;
   location: string;
 }
@@ -79,9 +79,9 @@ const SignUp: React.FC = () => {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
-        company: formData.role === 'alumni' ? formData.company : null,
-        location: formData.role === 'alumni' ? formData.location : null,
+        role: formData.role.toLowerCase(),
+        company: formData.role === 'Working professional' ? formData.company : null,
+        location: formData.role === 'Working professional' ? formData.location : null,
       });
 
       console.log('Registration successful:', response.data);
@@ -206,7 +206,7 @@ const SignUp: React.FC = () => {
               I am a
             </label>
             <div className="grid grid-cols-2 gap-4">
-              {(['student', 'alumni'] as const).map((role) => (
+              {(['student', 'Working professional'] as const).map((role) => (
                 <button
                   key={role}
                   type="button"
@@ -285,8 +285,8 @@ const SignUp: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Company + Location (for alumnis only) */}
-            {formData.role === 'alumni' && (
+            {/* Company + Location (for Working professionals only) */}
+            {formData.role === 'Working professional' && (
               <>
                 {/* Company */}
                 <motion.div
