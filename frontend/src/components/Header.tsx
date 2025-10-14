@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut, Award } from 'lucide-react';
+import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut, Award, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from '../api'; // Import axios
 
@@ -66,6 +66,7 @@ const Header = () => {
     { name: 'Q&A', href: '/qa', icon: MessageCircle },
     { name: 'Resources', href: '/resources', icon: BookOpen },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    {name: 'Jobs', href: '/jobs', icon: Briefcase},
     { name: 'Profile', href: '/profile', icon: User },
   ];
 
