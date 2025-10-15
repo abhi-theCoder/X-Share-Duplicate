@@ -12,7 +12,7 @@ function Footer() {
           
           {/* Column 1: x-share (Mission & Socials) */}
           <div>
-            <span className="text-xl font-bold text-white mb-2 block">x-share</span>
+            <span className="text-xl font-bold text-white mb-2 block">X Share</span>
             <p className="text-gray-400 text-sm mb-4">Interview experience sharing for real growth.</p>
             <div className="flex space-x-4">
               {/* Social Icons matching the screenshot (FB, IG, LI) */}
