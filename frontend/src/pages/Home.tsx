@@ -232,7 +232,7 @@ const Home: React.FC = () => {
             transition={{ ...transition, delay: 0.1 }}
             className="text-center text-lg text-gray-600 mb-16"
           >
-            Real experiences, practical guidance, and a community focused on helping you succeed.
+            Real experiences, practical guidance, and a community focused on helping you succeed. 
           </motion.p>
 
           <div className="grid md:grid-cols-2 gap-10">
