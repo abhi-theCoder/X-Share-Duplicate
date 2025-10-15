@@ -28,7 +28,6 @@ interface Comment {
   users?: { name: string };
 }
 
-// Utility function to format dates
 const formatDate = (dateString: string | undefined): string => {
   if (!dateString) return 'Date not available';
   const date = new Date(dateString);
@@ -36,10 +35,8 @@ const formatDate = (dateString: string | undefined): string => {
   return date.toLocaleDateString('en-US', options);
 };
 
-// Colors for dynamic avatars
-const colors = ['#FF5733', '#33FF57', '#3357FF', '#F0A500', '#25B7D9', '#E63946', '#2A9D8F'];
+const colors = ['#5A67D8', '#4299E1', '#667EEA', '#805AD5', '#38B2AC', '#4FD1C5', '#319795'];
 
-// Function to generate a consistent color from a string
 const stringToColor = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -49,7 +46,6 @@ const stringToColor = (str: string): string => {
   return colors[index];
 };
 
-// Function to get initials from a name
 const getInitials = (name: string | undefined): string => {
   if (!name) return 'U';
   const parts = name.split(' ');
@@ -68,8 +64,7 @@ const ExperienceDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [commentLoading, setCommentLoading] = useState(false);
   
-  // This would be your actual logged-in user ID
-  const currentUserId = localStorage.getItem('userId'); 
+  const currentUserId = localStorage.getItem('userId');
 
   const fetchExperienceAndComments = async () => {
     try {
@@ -93,7 +88,6 @@ const ExperienceDetail: React.FC = () => {
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
     try {
-      // Optimistically update the UI
       setExperience(prev => {
         if (!prev) return prev;
         return {
@@ -103,7 +97,6 @@ const ExperienceDetail: React.FC = () => {
         };
       });
 
-      // Send the vote to the backend
       await axios.post(`/api/experiences/${id}/vote`, {
         userId: currentUserId,
         voteType
@@ -111,8 +104,6 @@ const ExperienceDetail: React.FC = () => {
 
     } catch (err) {
       console.error('Failed to submit vote:', err);
-      // Revert optimistic update if there's an error
-      // A more robust app would handle this with better state management
       fetchExperienceAndComments(); 
     }
   };
@@ -128,11 +119,9 @@ const ExperienceDetail: React.FC = () => {
         commentText: newComment,
       });
 
-      // Update comments list and clear input
       setComments(prev => [...prev, response.data]);
       setNewComment('');
       
-      // Update the comments count in the UI
       setExperience(prev => {
         if (!prev) return prev;
         return {
@@ -143,7 +132,6 @@ const ExperienceDetail: React.FC = () => {
 
     } catch (err) {
       console.error('Failed to add comment:', err);
-      // alert('Failed to add comment. Please try again.'); // Do not use alerts
     } finally {
       setCommentLoading(false);
     }
@@ -152,7 +140,7 @@ const ExperienceDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -173,19 +161,18 @@ const ExperienceDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         className="max-w-4xl mx-auto"
       >
-        <Link to="/experiences" className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200 mb-6">
+        <Link to="/experiences" className="inline-flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mb-6">
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Experiences
         </Link>
 
-        {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
@@ -204,7 +191,7 @@ const ExperienceDetail: React.FC = () => {
                 </p>
               </div>
             </div>
-            <span className="px-4 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-medium">
+            <span className="px-4 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
               {experience.type}
             </span>
           </div>
@@ -229,11 +216,11 @@ const ExperienceDetail: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-6 border-t pt-4 mt-4 border-gray-100">
-            <button onClick={() => handleVote('upvote')} className="flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors duration-200">
+            <button onClick={() => handleVote('upvote')} className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors duration-200">
               <ThumbsUp className="w-6 h-6" />
               <span className="font-semibold">{experience.upvotes}</span>
             </button>
-            <button onClick={() => handleVote('downvote')} className="flex items-center space-x-2 text-gray-500 hover:text-red-500 transition-colors duration-200">
+            <button onClick={() => handleVote('downvote')} className="flex items-center space-x-2 text-gray-500 hover:text-purple-500 transition-colors duration-200">
               <ThumbsDown className="w-6 h-6" />
               <span className="font-semibold">{experience.downvotes}</span>
             </button>
@@ -247,7 +234,6 @@ const ExperienceDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Experience Details Section */}
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Experience Breakdown</h2>
           
@@ -267,23 +253,21 @@ const ExperienceDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Comments Section */}
         <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Comments ({comments.length})</h2>
           
-          {/* New Comment Input */}
           <form onSubmit={handleCommentSubmit} className="mb-8">
             <div className="relative">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a comment..."
-                className="w-full pl-4 pr-12 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200"
+                className="w-full pl-4 pr-12 py-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 rows={3}
               />
               <button
                 type="submit"
-                className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-full hover:from-orange-600 hover:to-green-700 transition-all duration-200"
+                className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-full hover:from-blue-700 hover:to-blue-500 transition-all duration-200"
                 disabled={commentLoading}
               >
                 {commentLoading ? (
@@ -295,7 +279,6 @@ const ExperienceDetail: React.FC = () => {
             </div>
           </form>
 
-          {/* Comment List */}
           <div className="space-y-6">
             {comments.length > 0 ? (
               comments.map(comment => (

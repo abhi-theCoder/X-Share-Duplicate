@@ -29,7 +29,7 @@ const formatDate = (dateString: string | undefined): string => {
 };
 
 // Colors for dynamic avatars
-const colors = ['#FF5733', '#33FF57', '#3357FF', '#F0A500', '#25B7D9', '#E63946', '#2A9D8F'];
+const colors = ['#5A67D8', '#4299E1', '#667EEA', '#805AD5', '#38B2AC', '#4FD1C5', '#319795'];
 
 // Function to generate a consistent color from a string
 const stringToColor = (str: string): string => {
@@ -48,7 +48,6 @@ const Experiences: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Use a placeholder ID from localStorage. In a real app, this should come from a secure authentication system.
   const [currentUserId] = useState<string>(() => {
     let userId = localStorage.getItem('userId');
     if (!userId) {
@@ -58,10 +57,7 @@ const Experiences: React.FC = () => {
     return userId;
   });
 
-  // State to manage user's votes based on backend data
   const [userVotes, setUserVotes] = useState<Record<number, 'upvote' | 'downvote' | null>>({});
-
-  // New state to track bookmarked experiences
   const [bookmarkedExperiences, setBookmarkedExperiences] = useState<Set<number>>(new Set());
 
   const categories = ['All', 'internship', 'job', 'hackathon', 'other'];
@@ -91,17 +87,15 @@ const Experiences: React.FC = () => {
 
   const fetchBookmarks = async () => {
     try {
-      // The backend should return an array of bookmarked experience IDs for the current user
       const response = await axios.get<{ experienceId: number }[]>(`/api/bookmarks/${currentUserId}`,{
         headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}` 
-      },
+        },
       });
       const bookmarkedIds = new Set(response.data.map(b => b.experienceId));
       setBookmarkedExperiences(bookmarkedIds);
     } catch (err) {
       console.error('Failed to fetch bookmarks:', err);
-      // Not critical to show an error, but log it
     }
   };
 
@@ -170,14 +164,12 @@ const Experiences: React.FC = () => {
     }
   };
 
-  // New function to handle bookmarking
   const handleBookmark = async (e: React.MouseEvent<HTMLButtonElement>, experienceId: number) => {
     e.preventDefault();
     e.stopPropagation();
 
     const isBookmarked = bookmarkedExperiences.has(experienceId);
     
-    // Optimistically update the UI
     const newBookmarks = new Set(bookmarkedExperiences);
     if (isBookmarked) {
       newBookmarks.delete(experienceId);
@@ -186,15 +178,13 @@ const Experiences: React.FC = () => {
     }
     setBookmarkedExperiences(newBookmarks);
 
-    // Send the request to the backend
     try {
       if (isBookmarked) {
-        // Corrected DELETE request
         await axios.delete(`/api/bookmarks`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}` 
           },
-          data: { // Data for DELETE must be in the 'data' property
+          data: {
             userId: currentUserId,
             experienceId
           }
@@ -208,7 +198,6 @@ const Experiences: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to update bookmark:', err);
-      // Revert the state on failure
       setBookmarkedExperiences(bookmarkedExperiences);
     }
   };
@@ -219,8 +208,8 @@ const Experiences: React.FC = () => {
     const authorName = exp.users?.name || '';
 
     const matchesSearch = syntheticTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         syntheticContent.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         authorName.toLowerCase().includes(searchTerm.toLowerCase());
+                          syntheticContent.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          authorName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || exp.type === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -228,7 +217,7 @@ const Experiences: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -251,7 +240,7 @@ const Experiences: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -260,19 +249,43 @@ const Experiences: React.FC = () => {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Career <span className="bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">Experiences</span>
+            Career <span className="bg-gradient-to-r from-blue-700 to-purple-600 bg-clip-text text-transparent">Experiences</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Learn from the journeys of successful professionals who've walked the path before you.
           </p>
         </motion.div>
 
-        {/* Search and Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="mt-16 text-center"
+        >
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 border border-blue-200">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              Have an Experience to Share?
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              Help the next generation by sharing your career journey, challenges, and insights.
+            </p>
+            <Link to="/share-experience">
+              <button className="px-8 py-4 text-white bg-gradient-to-r from-blue-600 to-blue-400 shadow-lg disabled:opacity-50 text-white rounded-xl font-semibold text-lg
+                hover:from-blue-700 hover:to-blue-500
+                hover:transform hover:scale-105 hover:-translate-y-1
+                hover:shadow-2xl hover:shadow-inner-glow
+                transition-all duration-300 ease-in-out">
+                Share Your Story
+              </button>
+            </Link>
+          </div>
+        </motion.div>
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8 flex flex-col md:flex-row gap-4"
+          className="mt-8 mb-8 flex flex-col md:flex-row gap-4"
         >
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -281,7 +294,7 @@ const Experiences: React.FC = () => {
               placeholder="Search experiences..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -289,7 +302,7 @@ const Experiences: React.FC = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             >
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
@@ -298,7 +311,6 @@ const Experiences: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Experiences Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredExperiences.length > 0 ? (
             filteredExperiences.map((experience, index) => (
@@ -307,7 +319,7 @@ const Experiences: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-orange-200 group"
+                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 group"
               >
                 <Link to={`/experiences/${experience.id}`} className="block">
                   <div className="p-6">
@@ -330,7 +342,7 @@ const Experiences: React.FC = () => {
                       </div>
                     </div>
 
-                    <h4 className="text-lg font-bold text-gray-800 mb-3 group-hover:text-orange-600 transition-colors duration-200">
+                    <h4 className="text-lg font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition-colors duration-200">
                       {experience.role || 'Career Experience'} at {experience.company || 'A Company'}
                     </h4>
                     <p className="text-gray-600 mb-4 line-clamp-3">
@@ -342,7 +354,7 @@ const Experiences: React.FC = () => {
                         <Clock className="w-4 h-4 mr-1" />
                         <span>{formatDate(experience.created_at)}</span>
                       </div>
-                      <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-medium">
                         {experience.type}
                       </span>
                     </div>
@@ -351,14 +363,14 @@ const Experiences: React.FC = () => {
                       <div className="flex items-center space-x-6">
                         <button
                           onClick={(e) => handleVote(e, experience.id, 'upvote')}
-                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${userVotes[experience.id] === 'upvote' ? 'bg-green-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${userVotes[experience.id] === 'upvote' ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
                         >
                           <ThumbsUp className={`w-5 h-5 ${userVotes[experience.id] === 'upvote' ? 'fill-current' : ''}`} />
                           <span>{experience.upvotes}</span>
                         </button>
                         <button
                           onClick={(e) => handleVote(e, experience.id, 'downvote')}
-                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${userVotes[experience.id] === 'downvote' ? 'bg-red-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                          className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${userVotes[experience.id] === 'downvote' ? 'bg-purple-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
                         >
                           <ThumbsDown className={`w-5 h-5 ${userVotes[experience.id] === 'downvote' ? 'fill-current' : ''}`} />
                           <span>{experience.downvotes}</span>
@@ -367,7 +379,6 @@ const Experiences: React.FC = () => {
                           <MessageCircle className="w-5 h-5" />
                           <span>{experience.comments_count}</span>
                         </div>
-                        {/* New Bookmark button */}
                         <button
                           onClick={(e) => handleBookmark(e, experience.id)}
                           className={`flex items-center space-x-2 transition-all duration-200 p-2 rounded-full ${bookmarkedExperiences.has(experience.id) ? 'bg-blue-500 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
@@ -393,31 +404,7 @@ const Experiences: React.FC = () => {
           )}
         </div>
 
-        {/* Share Experience CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-16 text-center"
-        >
-          <div className="bg-gradient-to-r from-orange-50 to-green-50 rounded-2xl p-8 border border-orange-200">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Have an Experience to Share?
-            </h3>
-            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-              Help the next generation by sharing your career journey, challenges, and insights.
-            </p>
-            <Link to="/share-experience">
-              <button className="px-8 py-4 text-white bg-gradient-to-r from-[#FF914D] to-[#3CB371] shadow-lg disabled:opacity-50 text-white rounded-xl font-semibold text-lg
-                hover:from-[#E67E22] hover:to-[#2E8B57]
-                hover:transform hover:scale-105 hover:-translate-y-1
-                hover:shadow-2xl hover:shadow-inner-glow
-                transition-all duration-300 ease-in-out">
-                Share Your Story
-              </button>
-            </Link>
-          </div>
-        </motion.div>
+
       </div>
     </div>
   );
