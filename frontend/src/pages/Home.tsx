@@ -181,7 +181,7 @@ const Home: React.FC = () => {
             transition={transition}
             className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-12"
           >
-            How Detto works
+            How X Share works
           </motion.h2>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
@@ -223,7 +223,7 @@ const Home: React.FC = () => {
             transition={transition}
             className="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-4"
           >
-            Why choose Detto
+            Why choose X Share
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
