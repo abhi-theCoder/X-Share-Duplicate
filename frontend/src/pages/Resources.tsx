@@ -2,8 +2,29 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Download, Star, Calendar, User, FileText, Video } from 'lucide-react';
 
+// Define the Resource interface for strong typing of the resource objects
+interface Resource {
+  id: number;
+  title: string;
+  description: string;
+  author: string;
+  company: string;
+  type: string;
+  format: string;
+  downloads: number;
+  rating: number;
+  uploadedAt: string;
+  icon: React.ElementType;
+}
+
+// Define the props interface for RatingStars
+interface RatingStarsProps {
+  rating: number;
+  onRate: (rating: number) => void;
+}
+
 // Star Rating Component for the popup
-const RatingStars = ({ rating, onRate }) => {
+const RatingStars: React.FC<RatingStarsProps> = ({ rating, onRate }) => {
   const [hoveredRating, setHoveredRating] = useState(0);
 
   return (
@@ -24,15 +45,15 @@ const RatingStars = ({ rating, onRate }) => {
 };
 
 // Main Resources Component
-const Resources = () => {
+const Resources: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedResource, setSelectedResource] = useState(null);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
   const resourceTypes = ['All', 'Interview Questions', 'Coding Challenges', 'Resume Templates', 'Video Tutorials'];
 
-  const [resources, setResources] = useState([
+  const [resources, setResources] = useState<Resource[]>([
     {
       id: 1,
       title: 'System Design Interview Questions - FAANG Companies',
@@ -89,24 +110,23 @@ const Resources = () => {
 
   const filteredResources = resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.description.toLowerCase().includes(searchTerm.toLowerCase());
+                          resource.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType === 'All' || resource.type === selectedType;
     return matchesSearch && matchesType;
   });
   
-  const openRatingModal = (resource) => {
+  const openRatingModal = (resource: Resource) => {
     setSelectedResource(resource);
     setIsModalOpen(true);
   };
   
-  const closeRatingModal = () => {
+  const closeRatingModal = (): void => {
     setIsModalOpen(false);
     setSelectedResource(null);
   };
 
-  const handleRate = (newRating) => {
+  const handleRate = (newRating: number): void => {
     if (selectedResource) {
-      // In a real application, you would make an API call here to update the rating on the server
       const updatedResources = resources.map(resource => 
         resource.id === selectedResource.id ? { ...resource, rating: newRating } : resource
       );
@@ -114,9 +134,29 @@ const Resources = () => {
     }
     closeRatingModal();
   };
+  
+  // --- DEFINITIVE COLOR THEME DEFINITIONS (Bright Cyan/Blue) ---
+  const primaryAccentColor = '#45B5DA'; // Primary Accent (User requested #34A19D -> #45B5DA, applying to primary)
+  const secondaryAccentColor = '#0F9BC0'; // Darker Cyan for contrast (Adjusted from old Teal)
+  const mainBackgroundColor = '#EEF2F7'; // Main Background (User requested #E6FFFA -> #EEF2F7)
+  const cardBackgroundColor = '#FFFFFF'; // Pure white for cards
+  const lightElementColor = '#D4EEF9'; // Very light cyan for secondary backgrounds (Adjusted from old light Teal)
+
+  // The custom focus style now uses the primary accent color.
+  const customFocusStyle = { 
+      '--tw-ring-color': primaryAccentColor,
+  } as React.CSSProperties;
+  
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedType(e.target.value);
+  };
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+    // Applying new background color #EEF2F7
+    <div 
+      className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8" 
+      style={{ backgroundColor: mainBackgroundColor }}
+    > 
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -125,7 +165,16 @@ const Resources = () => {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Interview <span className="bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">Resources</span>
+            Interview 
+            <span 
+              // Header text gradient using the new blue/cyan accents
+              style={{ 
+                background: `linear-gradient(to right, ${primaryAccentColor}, ${secondaryAccentColor})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                Resources
+            </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Access curated resources shared by industry experts to ace your interviews and advance your career.
@@ -139,7 +188,8 @@ const Resources = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+              // Sidebar card background is pure white
+              className="rounded-2xl shadow-lg p-6 border border-gray-100" style={{ backgroundColor: cardBackgroundColor }}
             >
               <h3 className="text-lg font-bold text-gray-800 mb-4">Filter Resources</h3>
               <div className="space-y-4">
@@ -147,8 +197,10 @@ const Resources = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Resource Type</label>
                   <select
                     value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                    onChange={handleTypeChange}
+                    // Uses customFocusStyle for the ring color
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-opacity-75 transition-all duration-200"
+                    style={customFocusStyle} 
                   >
                     {resourceTypes.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -163,13 +215,21 @@ const Resources = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-gradient-to-br from-orange-50 to-green-50 rounded-2xl p-6 mt-6 border border-orange-200"
+              // Sidebar CTA background uses the new light cyan color
+              className="rounded-2xl p-6 mt-6 border border-gray-200" style={{ backgroundColor: lightElementColor, borderColor: primaryAccentColor }}
             >
               <h3 className="text-lg font-bold text-gray-800 mb-3">Share Your Resources</h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-gray-700 text-sm mb-4">
                 Help others by sharing your interview materials and earn points!
               </p>
-              <button className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200">
+              {/* Button gradient uses the strong new accents */}
+              <button 
+                className="w-full px-4 py-2 text-white rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-xl"
+                style={{
+                  background: `linear-gradient(to right, ${primaryAccentColor}, ${secondaryAccentColor})`,
+                  transition: 'background-color 0.2s',
+                }}
+              >
                 Upload Resource
               </button>
             </motion.div>
@@ -191,7 +251,9 @@ const Resources = () => {
                   placeholder="Search resources..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Uses customFocusStyle for the ring color
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-opacity-75 transition-all duration-200 shadow-sm"
+                  style={customFocusStyle}
                 />
               </div>
             </motion.div>
@@ -206,15 +268,22 @@ const Resources = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:border-orange-200 hover:shadow-xl transition-all duration-300 group"
+                    // Card background is pure white
+                    className="rounded-2xl shadow-lg p-6 border border-gray-100 transition-all duration-300 group hover:shadow-xl" 
+                    style={{ backgroundColor: cardBackgroundColor }}
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-green-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        {/* Icon background gradient uses the new blue/cyan accents */}
+                        <div 
+                          className="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-200 shadow-lg"
+                          style={{ background: `linear-gradient(to bottom right, ${primaryAccentColor}, ${secondaryAccentColor})` }}
+                        >
                           <IconComponent className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                          <span className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-xs font-medium">
+                          {/* Type tag text and background uses the new light cyan colors */}
+                          <span className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: lightElementColor, color: secondaryAccentColor }}>
                             {resource.type}
                           </span>
                         </div>
@@ -225,7 +294,12 @@ const Resources = () => {
                       </div>
                     </div>
 
-                    <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-orange-600 transition-colors duration-200">
+                    <h3 
+                      className="text-xl font-bold text-gray-800 mb-3 transition-colors duration-200" 
+                      // Custom hover effect for title color using the primary accent
+                      onMouseEnter={(e: React.MouseEvent<HTMLHeadingElement>) => e.currentTarget.style.color = primaryAccentColor} 
+                      onMouseLeave={(e: React.MouseEvent<HTMLHeadingElement>) => e.currentTarget.style.color = '#1f2937'}
+                    >
                       {resource.title}
                     </h3>
                     <p className="text-gray-600 mb-4 leading-relaxed">
@@ -234,7 +308,11 @@ const Resources = () => {
 
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-green-500 rounded-full flex items-center justify-center">
+                        {/* Author icon background gradient uses the new blue/cyan accents */}
+                        <div 
+                          className="w-8 h-8 rounded-full flex items-center justify-center shadow-md"
+                          style={{ background: `linear-gradient(to bottom right, ${primaryAccentColor}, ${secondaryAccentColor})` }}
+                        >
                           <User className="w-4 h-4 text-white" />
                         </div>
                         <div>
@@ -254,20 +332,28 @@ const Resources = () => {
                           <Download className="w-4 h-4" />
                           <span>{resource.downloads}</span>
                         </div>
-                        {/* New Rate button */}
+                        {/* Rate button color uses the primary accent color */}
                         <button 
                           onClick={() => openRatingModal(resource)}
-                          className="flex items-center space-x-1 text-orange-500 hover:text-orange-600 transition-colors duration-200 font-medium"
+                          className="flex items-center space-x-1 transition-colors duration-200 font-medium"
+                          style={{ color: primaryAccentColor }} onMouseEnter={e => e.currentTarget.style.color = secondaryAccentColor} onMouseLeave={e => e.currentTarget.style.color = primaryAccentColor}
                         >
                           <Star className="w-4 h-4" />
                           <span>Rate this resource</span>
                         </button>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                        {/* Format tag background uses light cyan */}
+                        <span className="px-2 py-1 text-gray-700 rounded text-xs font-medium" style={{ backgroundColor: lightElementColor }}>
                           {resource.format}
                         </span>
-                        <button className="px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200">
+                        {/* Download button gradient uses the strong new accents */}
+                        <button 
+                          className="px-4 py-2 text-white rounded-lg font-medium transform hover:scale-105 transition-all duration-200 shadow-lg"
+                          style={{
+                            background: `linear-gradient(to right, ${primaryAccentColor}, ${secondaryAccentColor})`,
+                          }}
+                        >
                           Download
                         </button>
                       </div>
@@ -281,7 +367,7 @@ const Resources = () => {
       </div>
 
       {/* Rating Pop-up Modal */}
-      <AnimatePresence>
+      <AnimatePresence> 
         {isModalOpen && (
           <motion.div
             initial={{ opacity: 0 }}
