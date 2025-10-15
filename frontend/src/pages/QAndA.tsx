@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Search, ThumbsUp, MessageCircle, Clock, User, CheckCircle } from 'lucide-react';
 
+// Define custom color variables for Tailwind classes to match the x-share palette
+// Primary Accent Blue: #4CAED8
+// Light Background: #F4FAFE (Used as main background)
+// Card Background: White (Default)
+// Secondary/Border: #D1E0E8 (Used for borders/subtle accents)
+
 const QAndA = () => {
   const [question, setQuestion] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,7 +92,8 @@ const QAndA = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    // Main Background: #F4FAFE (closest to bg-gray-50/bg-blue-50)
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-[#F4FAFE]"> 
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -95,7 +102,8 @@ const QAndA = () => {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Questions & <span className="bg-gradient-to-r from-orange-600 to-green-600 bg-clip-text text-transparent">Answers</span>
+            Questions & <span className="text-[#4CAED8]">Answers</span>
+            {/* Accent Blue: #4CAED8 */}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Get your career and technical questions answered by experienced professionals and peers.
@@ -110,7 +118,8 @@ const QAndA = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100"
+              className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-[#D1E0E8]"
+              // Border color set to #D1E0E8
             >
               <h3 className="text-xl font-bold text-gray-800 mb-4">Ask a Question</h3>
               <div className="space-y-4">
@@ -118,20 +127,23 @@ const QAndA = () => {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   placeholder="What's your question? Be specific and detailed..."
-                  className="w-full h-32 p-4 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  className="w-full h-32 p-4 border border-[#D1E0E8] rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-[#4CAED8] focus:border-transparent transition-all duration-200"
+                  // Focus ring set to Accent Blue #4CAED8
                 />
                 <div className="flex justify-between items-center">
                   <div className="flex space-x-2">
                     {popularTags.slice(0, 3).map(tag => (
                       <button
                         key={tag}
-                        className="px-3 py-1 bg-orange-100 text-orange-600 rounded-full text-sm hover:bg-orange-200 transition-colors duration-200"
+                        className="px-3 py-1 bg-[#EEF2F7] text-[#4CAED8] rounded-full text-sm hover:bg-[#D1E0E8] transition-colors duration-200"
+                        // Tag background set to #EEF2F7, text to #4CAED8
                       >
                         #{tag}
                       </button>
                     ))}
                   </div>
-                  <button className="flex items-center px-6 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105">
+                  <button className="flex items-center px-6 py-2 bg-[#4CAED8] text-white rounded-xl font-medium hover:bg-blue-700 transition-all duration-200 transform hover:scale-105">
+                    {/* Button background set to Accent Blue #4CAED8 */}
                     <Send className="w-4 h-4 mr-2" />
                     Post Question
                   </button>
@@ -153,7 +165,8 @@ const QAndA = () => {
                   placeholder="Search questions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-3 border border-[#D1E0E8] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4CAED8] focus:border-transparent transition-all duration-200"
+                  // Focus ring set to Accent Blue #4CAED8
                 />
               </div>
             </motion.div>
@@ -166,11 +179,13 @@ const QAndA = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:border-orange-200 hover:shadow-xl transition-all duration-300"
+                  className="bg-white rounded-2xl shadow-lg p-6 border border-[#D1E0E8] hover:border-[#4CAED8] hover:shadow-xl transition-all duration-300"
+                  // Border and hover border set to palette colors
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-green-500 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-[#4CAED8] rounded-full flex items-center justify-center">
+                        {/* Avatar background set to Accent Blue #4CAED8 */}
                         <User className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -182,24 +197,28 @@ const QAndA = () => {
                       </div>
                     </div>
                     {q.isAnswered && (
-                      <div className="flex items-center text-green-600">
+                      <div className="flex items-center text-[#4CAED8]">
+                        {/* Answered text color set to Accent Blue #4CAED8 */}
                         <CheckCircle className="w-5 h-5 mr-1" />
                         <span className="text-sm font-medium">Answered</span>
                       </div>
                     )}
                   </div>
 
-                  <h3 className="text-lg font-bold text-gray-800 mb-3 hover:text-orange-600 transition-colors duration-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-3 hover:text-[#4CAED8] transition-colors duration-200">
+                    {/* Hover text set to Accent Blue #4CAED8 */}
                     {q.question}
                   </h3>
 
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-6">
-                      <button className="flex items-center space-x-2 text-gray-500 hover:text-orange-500 transition-colors duration-200">
+                      <button className="flex items-center space-x-2 text-gray-500 hover:text-[#4CAED8] transition-colors duration-200">
+                        {/* Hover color set to Accent Blue #4CAED8 */}
                         <ThumbsUp className="w-5 h-5" />
                         <span>{q.votes}</span>
                       </button>
-                      <button className="flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors duration-200">
+                      <button className="flex items-center space-x-2 text-gray-500 hover:text-[#4CAED8] transition-colors duration-200">
+                        {/* Hover color set to Accent Blue #4CAED8 */}
                         <MessageCircle className="w-5 h-5" />
                         <span>{q.answers} Answers</span>
                       </button>
@@ -208,7 +227,8 @@ const QAndA = () => {
                       {q.tags.map(tag => (
                         <span
                           key={tag}
-                          className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium"
+                          className="px-3 py-1 bg-[#EEF2F7] text-gray-600 rounded-full text-xs font-medium"
+                          // Tag background set to a light shade #EEF2F7
                         >
                           {tag}
                         </span>
@@ -218,7 +238,7 @@ const QAndA = () => {
 
                   {/* Comments Section */}
                   {q.comments.length > 0 || (questionComments[q.id] && questionComments[q.id].length > 0) ? (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="mt-4 pt-4 border-t border-[#D1E0E8]">
                       <h4 className="text-md font-bold text-gray-700 mb-3">Comments</h4>
                       {/* Display existing comments */}
                       {q.comments.map(comment => (
@@ -238,18 +258,20 @@ const QAndA = () => {
                   ) : null}
 
                   {/* Comment Input */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-[#D1E0E8]">
                     <h4 className="text-md font-bold text-gray-700 mb-3">Add a Comment</h4>
                     <textarea
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
                       placeholder="Share your thoughts..."
-                      className="w-full h-24 p-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      className="w-full h-24 p-3 border border-[#D1E0E8] rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#4CAED8] focus:border-transparent transition-all duration-200"
+                      // Focus ring set to Accent Blue #4CAED8
                     />
                     <div className="flex justify-end mt-2">
                       <button
                         onClick={() => handleAddComment(q.id)}
-                        className="px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
+                        className="px-4 py-2 bg-[#4CAED8] text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200"
+                        // Button background set to Accent Blue #4CAED8
                       >
                         Post Comment
                       </button>
@@ -267,14 +289,15 @@ const QAndA = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100"
+              className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-[#D1E0E8]"
             >
               <h3 className="text-xl font-bold text-gray-800 mb-4">Popular Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {popularTags.map(tag => (
                   <button
                     key={tag}
-                    className="px-3 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm hover:bg-orange-100 transition-colors duration-200"
+                    className="px-3 py-2 bg-[#EEF2F7] text-[#4CAED8] rounded-lg text-sm hover:bg-[#D1E0E8] transition-colors duration-200"
+                    // Tag colors set to subtle background and accent blue
                   >
                     #{tag}
                   </button>
@@ -287,7 +310,7 @@ const QAndA = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+              className="bg-white rounded-2xl shadow-lg p-6 border border-[#D1E0E8]"
             >
               <h3 className="text-xl font-bold text-gray-800 mb-4">Top Contributors</h3>
               <div className="space-y-4">
@@ -299,7 +322,8 @@ const QAndA = () => {
                   <div key={contributor.name} className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                        index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-500'
+                        // Using Gold, Silver, and the Accent Blue for the top three ranks
+                        index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-[#4CAED8]'
                       }`}>
                         {index + 1}
                       </div>
@@ -308,7 +332,8 @@ const QAndA = () => {
                         <p className="text-sm text-gray-500">{contributor.answers} answers</p>
                       </div>
                     </div>
-                    <span className="font-bold text-orange-600">{contributor.points}</span>
+                    <span className="font-bold text-[#4CAED8]">{contributor.points}</span>
+                    {/* Points text set to Accent Blue #4CAED8 */}
                   </div>
                 ))}
               </div>
