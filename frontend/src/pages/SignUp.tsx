@@ -92,8 +92,8 @@ const SignUp: React.FC = () => {
       }, 4000); // Wait 4 seconds for animation to complete
 
     } catch (error: any) {
-        console.error('Login failed:', error.response?.data?.message || error.message);
-        setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
+        console.error('Registration failed:', error.response?.data?.message || error.message);
+        setErrorMessage(error.response?.data?.message || 'Registration failed. Please try again.');
       } finally {
       setIsLoading(false);
     }
@@ -107,7 +107,7 @@ const SignUp: React.FC = () => {
       y: [0, -20, 0],
       rotate: [0, 360],
       transition: {
-        type: 'tween', // Changed from 'spring' to 'tween' to allow multiple keyframes
+        type: 'tween',
         duration: 0.8,
         ease: 'easeInOut',
       },
@@ -127,7 +127,8 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+    // Background: Changed to Blue-50/Indigo-50 (consistent with Login)
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50 relative">
       <AnimatePresence>
         {showCoinAnimation && (
           <motion.div
@@ -143,14 +144,15 @@ const SignUp: React.FC = () => {
               className="relative p-8 bg-white rounded-2xl shadow-2xl flex flex-col items-center justify-center text-center max-w-sm mx-auto"
             >
               <h3 className="text-3xl font-bold text-blue-600 mb-4">Signup Bonus!</h3>
-              <div className="text-4xl font-extrabold text-navy-900">
-                <span className="text-6xl font-extrabold text-purple-600">50</span> Coins
+              <div className="text-4xl font-extrabold text-gray-900">
+                {/* Coin Text: Changed to Blue-600/Indigo-600 for consistency */}
+                <span className="text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">50</span> Coins
               </div>
               <p className="mt-2 text-gray-600">
                 Welcome! Your bonus coins have been added to your profile.
               </p>
               
-              {/* Coin Particles Animation */}
+              {/* Coin Particles Animation (✨ kept as a universal icon) */}
               {[...Array(25)].map((_, i) => (
                 <motion.span
                   key={i}
@@ -187,7 +189,8 @@ const SignUp: React.FC = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="w-16 h-16 bg-gradient-to-br from-orange-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4"
+              // Logo Gradient: Changed from Orange/Green to Blue-600/Indigo-600
+              className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4"
             >
               <Users className="w-8 h-8 text-white" />
             </motion.div>
@@ -213,8 +216,10 @@ const SignUp: React.FC = () => {
                   onClick={() => setFormData((prev) => ({ ...prev, role }))}
                   className={`p-4 border-2 rounded-xl font-medium transition-all duration-200 ${
                     formData.role === role
-                      ? 'border-orange-500 bg-orange-50 text-orange-600'
-                      : 'border-gray-200 text-gray-600 hover:border-orange-300'
+                      ? // Active Role: Changed from orange to blue
+                        'border-blue-500 bg-blue-50 text-blue-600'
+                      : // Hover Role: Changed from orange to blue
+                        'border-gray-200 text-gray-600 hover:border-blue-300'
                   }`}
                 >
                   <div className="capitalize">{role}</div>
@@ -231,6 +236,7 @@ const SignUp: React.FC = () => {
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {errorMessage && (
+              // Error Alert: Kept Red-500 for error state
               <div
                 className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg"
                 role="alert"
@@ -255,7 +261,8 @@ const SignUp: React.FC = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Focus Ring: Changed from orange-500 to blue-500
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your full name"
                   required
                 />
@@ -278,7 +285,8 @@ const SignUp: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Focus Ring: Changed from orange-500 to blue-500
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your email"
                   required
                 />
@@ -304,7 +312,8 @@ const SignUp: React.FC = () => {
                       name="company"
                       value={formData.company}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      // Focus Ring: Changed from orange-500 to blue-500
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       placeholder="Your current company"
                       required
                     />
@@ -327,7 +336,8 @@ const SignUp: React.FC = () => {
                       name="location"
                       value={formData.location}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                      // Focus Ring: Changed from orange-500 to blue-500
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                       placeholder="Your city"
                       required
                     />
@@ -352,7 +362,8 @@ const SignUp: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Focus Ring: Changed from orange-500 to blue-500
+                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Create a password"
                   required
                 />
@@ -386,7 +397,8 @@ const SignUp: React.FC = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Focus Ring: Changed from orange-500 to blue-500
+                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Confirm your password"
                   required
                 />
@@ -411,23 +423,26 @@ const SignUp: React.FC = () => {
               transition={{ duration: 0.6, delay: 1.0 }}
             >
               <label className="flex items-start space-x-2">
+                {/* Checkbox: Changed from text-orange-600/focus:ring-orange-500 to blue */}
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 mt-1"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
                   required
                 />
                 <span className="text-sm text-gray-600 leading-relaxed">
                   I agree to the{' '}
                   <Link
                     to="#"
-                    className="text-orange-600 hover:text-orange-700 font-medium"
+                    // Link: Changed from text-orange-600 to text-blue-600
+                    className="text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Terms of Service
                   </Link>{' '}
                   and{' '}
                   <Link
                     to="#"
-                    className="text-orange-600 hover:text-orange-700 font-medium"
+                    // Link: Changed from text-orange-600 to text-blue-600
+                    className="text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Privacy Policy
                   </Link>
@@ -442,11 +457,8 @@ const SignUp: React.FC = () => {
               transition={{ duration: 0.6, delay: 1.1 }}
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center px-6 py-3 text-white bg-gradient-to-r from-[#FF914D] to-[#3CB371] shadow-lg disabled:opacity-50 text-white rounded-xl font-semibold text-lg
-                hover:from-[#E67E22] hover:to-[#2E8B57]
-                hover:transform hover:scale-105 hover:-translate-y-1
-                hover:shadow-2xl hover:shadow-inner-glow
-                transition-all duration-300 ease-in-out transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              // Button Gradient: Changed to Blue-600/Blue-400 (consistent with Header/Login)
+              className="w-full flex items-center justify-center px-6 py-3 text-white bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-500 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -470,7 +482,8 @@ const SignUp: React.FC = () => {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-orange-600 hover:text-orange-700 font-medium"
+                // Link: Changed from text-orange-600 to text-blue-600
+                className="text-blue-600 hover:text-blue-700 font-medium"
               >
                 Sign in here
               </Link>

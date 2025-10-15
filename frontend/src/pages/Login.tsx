@@ -35,7 +35,8 @@ const Login = () => {
   
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50 via-white to-green-50">
+    // Background: Changed to a neutral, slightly blue/indigo tinted gradient
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-md mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -49,7 +50,8 @@ const Login = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="w-16 h-16 bg-gradient-to-br from-orange-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-4"
+              // Logo Gradient: Changed from Orange/Green to Blue-600/Indigo-600
+              className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4"
             >
               <Users className="w-8 h-8 text-white" />
             </motion.div>
@@ -60,6 +62,7 @@ const Login = () => {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {errorMessage && (
+              // Error Alert: Kept Red-500 for error state, which is standard practice
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
                 <p>{errorMessage}</p>
               </div>
@@ -76,7 +79,8 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Focus Ring: Changed from orange-500 to blue-500
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your email"
                   required
                 />
@@ -95,7 +99,8 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                  // Focus Ring: Changed from orange-500 to blue-500
+                  className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your password"
                   required
                 />
@@ -116,10 +121,12 @@ const Login = () => {
               className="flex items-center justify-between"
             >
               <label className="flex items-center">
-                <input type="checkbox" className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500" />
+                {/* Checkbox: Changed from text-orange-600/focus:ring-orange-500 to blue */}
+                <input type="checkbox" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
-              <Link to="#" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+              {/* Link: Changed from text-orange-600 to text-blue-600 */}
+              <Link to="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
                 Forgot password?
               </Link>
             </motion.div>
@@ -130,7 +137,8 @@ const Login = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              // Button Gradient: Changed from Orange/Green to Blue-600/Blue-400 (matching Sign Up in Header)
+              className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-500 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -169,7 +177,8 @@ const Login = () => {
           >
             <Link
               to="/signup"
-              className="inline-flex items-center px-6 py-3 border-2 border-orange-500 text-orange-600 rounded-xl font-semibold hover:bg-orange-50 transition-all duration-200"
+              // Secondary Button Style: Changed from orange to blue for border and text
+              className="inline-flex items-center px-6 py-3 border-2 border-blue-500 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200"
             >
               Create New Account
             </Link>
