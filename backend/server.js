@@ -5,6 +5,9 @@ const authRoutes = require('./routes/auth.js');
 const experienceRoutes = require('./routes/experience.js');
 const profileRoutes = require('./routes/profile.js');
 const bookmarks = require('./routes/bookmark.js');
+const activityRoutes = require('./routes/activityRoutes.js');
+const qnaRoutes = require('./routes/qnaRoutes.js');
+const leaderboardRoutes = require('./routes/leaderboardRoutes.js');
 const verifyToken = require('./controllers/verifyLoginToken.js');
 // Load environment variables from .env file
 dotenv.config();
@@ -20,8 +23,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/experiences', experienceRoutes);
 app.use('/api/profile',profileRoutes);
 app.use('/api/bookmarks', bookmarks);
+app.use('/api/activity', activityRoutes);
+app.use('/api/qna', qnaRoutes);
 app.use('/api/verifyToken', verifyToken);
-
+app.use('/api/leaderboard', leaderboardRoutes);
 // A simple welcome route to confirm the server is running
 app.get('/', (req, res) => {
   res.send('Welcome to the XShare Backend API!');

@@ -20,28 +20,66 @@ async function shareExperience(req, res) {
       throw insertError;
     }
 
-    // Give the user 50 points
-    // First, fetch the current user's points
+    // 2️⃣ Fetch user's total points
     const { data: userData, error: fetchError } = await supabase
       .from('users')
       .select('points')
       .eq('id', userId)
       .single();
 
-    if (fetchError) {
-      throw fetchError;
-    }
+    if (fetchError) throw fetchError;
 
     const newPoints = (userData.points || 0) + POINTS_PER_EXPERIENCE;
 
-    // Update the user's points in the 'users' table
+    // 3️⃣ Update user's total points
     const { error: updateError } = await supabase
       .from('users')
       .update({ points: newPoints })
       .eq('id', userId);
 
-    if (updateError) {
-      throw updateError;
+    if (updateError) throw updateError;
+
+    // 4️⃣ Check if an activity already exists for today
+    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+    const { data: existingActivity, error: fetchActivityError } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('date', today)
+      .eq('type', 'share_experience')
+      .single();
+
+    if (fetchActivityError && fetchActivityError.code !== 'PGRST116') {
+      // PGRST116 = No rows found
+      throw fetchActivityError;
+    }
+
+    if (existingActivity) {
+      // 5️⃣ Update existing activity (increment points and count)
+      const { error: updateActivityError } = await supabase
+        .from('activities')
+        .update({
+          points: existingActivity.points + POINTS_PER_EXPERIENCE,
+          num_of_activities: existingActivity.num_of_activities + 1,
+        })
+        .eq('id', existingActivity.id);
+
+      if (updateActivityError) throw updateActivityError;
+
+    } else {
+      // 6️⃣ Insert new activity record for today
+      const { error: insertActivityError } = await supabase
+        .from('activities')
+        .insert([{
+          user_id: userId,
+          type: 'share_experience',
+          title: newExperience[0]?.title || 'Experience Shared',
+          points: POINTS_PER_EXPERIENCE,
+          num_of_activities: 1,
+          date: today
+        }]);
+
+      if (insertActivityError) throw insertActivityError;
     }
 
     res.status(201).json({
