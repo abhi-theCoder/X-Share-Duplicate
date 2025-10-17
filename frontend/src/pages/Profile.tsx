@@ -6,6 +6,7 @@ import {
   BookOpen, MessageCircle, Heart, Upload, Save, X, LogOut, HeartHandshake, Users, ThumbsUp, Bookmark, FileText,
 } from 'lucide-react';
 import LoginRequired from '../components/LoginRequired';
+import verifyToken from '../components/verifyLogin';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import axios from '../api';
 
@@ -141,11 +142,27 @@ const Profile = () => {
     const fetchProfileAndBookmarks = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          setError('User not authenticated.');
-          setLoading(false);
-          return;
-        }
+
+        const checkLogin = async () => {
+          if (!token) {
+            setError('User not authenticated.');
+            setLoading(false);
+            return;
+          }
+
+          const valid = await verifyToken(token);
+
+          if(!valid){
+            setError('User not authenticated.');
+            setLoading(false);
+            return;
+          }
+          console.log(valid);
+        };
+    
+        checkLogin();
+
+        
 
         // Fetch Profile
         const profileRes = await axios.get('api/profile', {

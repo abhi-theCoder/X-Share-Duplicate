@@ -16,6 +16,7 @@ import Rewards from './pages/rewards';
 import ResumeBuilder from './pages/resume-builder';
 import Admin from './pages/admin';
 import JobPortal from './pages/JobPortal';
+import PrivateRoute from './components/privateRoute';
 
 function App() {
   return (
@@ -24,21 +25,27 @@ function App() {
         <Header />
         <main>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/experiences" element={<Experiences />} />
-            <Route path="/share-experience" element={<ShareExperiencePage/>} />
-            <Route path="/experiences/:id" element={<ExperienceDetail />} />
             <Route path="/qa" element={<QAndA />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/resume-builder" element={<ResumeBuilder/>} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/rewards" element={<Rewards/>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/jobs" element={<JobPortal />} />
-            <Route path="/admin" element={<Admin />} />
+
+            {/* Protected routes */}
+            <Route element={<PrivateRoute />}>
+              <Route path="/share-experience" element={<ShareExperiencePage/>} />
+              <Route path="/experiences/:id" element={<ExperienceDetail />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/rewards" element={<Rewards/>} />
+              <Route path="/resume-builder" element={<ResumeBuilder/>} />
+              <Route path="/admin" element={<Admin />} />
+            </Route>
           </Routes>
+
         </main>
         <Footer/>
       </div>

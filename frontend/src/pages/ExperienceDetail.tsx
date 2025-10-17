@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageCircle, Share2, Clock, Building, MapPin, Briefcase, ThumbsUp, ThumbsDown, Send } from 'lucide-react';
+import { verifyToken } from '../components/verifyLogin';
 import axios from '../api';
 
 interface Experience {
@@ -56,6 +57,7 @@ const getInitials = (name: string | undefined): string => {
 };
 
 const ExperienceDetail: React.FC = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [experience, setExperience] = useState<Experience | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -67,6 +69,31 @@ const ExperienceDetail: React.FC = () => {
   const currentUserId = localStorage.getItem('userId');
 
   const fetchExperienceAndComments = async () => {
+    const token = localStorage.getItem('token');
+    
+    const checkLogin = async () => {
+      if (!token) {
+        setError('User not authenticated.');
+        setLoading(false);
+        localStorage.clear();
+        navigate('/login');
+        return;
+      }
+
+      const valid = await verifyToken(token);
+
+      if(!valid){
+        setError('User not authenticated.');
+        setLoading(false);
+        localStorage.clear();
+        navigate('/login');
+        return;
+      }
+      
+    };
+
+    checkLogin();
+
     try {
       setLoading(true);
       const experienceResponse = await axios.get<Experience>(`/api/experiences/${id}`);

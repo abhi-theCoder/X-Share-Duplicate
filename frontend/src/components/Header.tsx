@@ -1,21 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut, Award, Briefcase } from 'lucide-react';
+import {
+  Menu, X, Users, MessageCircle, BookOpen,
+  Trophy, User, LogOut, Award, Briefcase
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from '../api'; // Import axios
+import { verifyToken } from './verifyLogin';
+import axios from '../api';
 
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userPoints, setUserPoints] = useState(null);
-  const [isPointsDropdownOpen, setIsPointsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const Header: React.FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [userPoints, setUserPoints] = useState<number | null>(null);
+  const [isPointsDropdownOpen, setIsPointsDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
+
+    const checkLogin = async () => {
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
+      const valid = await verifyToken(token);
+      console.log(valid)
+      setIsLoggedIn(valid);
+    };
+
+    checkLogin();
 
     const fetchUserPoints = async () => {
       if (!token) {
@@ -27,13 +48,12 @@ const Header = () => {
         const response = await axios.get('/api/profile', {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+          },
         });
-
         setUserPoints(response.data.points);
       } catch (error) {
-        console.error("Failed to fetch user profile:", error);
+        console.error('Failed to fetch user profile:', error);
         setUserPoints(null);
       }
     };
@@ -41,27 +61,26 @@ const Header = () => {
     fetchUserPoints();
   }, [location]);
 
-  // Handle clicks outside the points dropdown to close it
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsPointsDropdownOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dropdownRef]);
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     localStorage.clear();
     setIsLoggedIn(false);
     setUserPoints(null);
     navigate('/login');
   };
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     { name: 'Experiences', href: '/experiences', icon: Users },
     { name: 'Q&A', href: '/qa', icon: MessageCircle },
     { name: 'Resources', href: '/resources', icon: BookOpen },
@@ -70,7 +89,7 @@ const Header = () => {
     { name: 'Profile', href: '/profile', icon: User },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path: string): boolean => location.pathname === path;
 
   return (
     <motion.header
@@ -81,7 +100,7 @@ const Header = () => {
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo - Updated to Blue/Indigo scheme */}
+          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
               <Users className="w-6 h-6 text-white" />
@@ -91,10 +110,10 @@ const Header = () => {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Updated to Blue selection colors */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => {
-              const IconComponent = item.icon;
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
@@ -105,7 +124,7 @@ const Header = () => {
                       : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
+                  <Icon className="w-4 h-4" />
                   <span>{item.name}</span>
                   {isActive(item.href) && (
                     <motion.div
@@ -118,7 +137,7 @@ const Header = () => {
             })}
           </div>
 
-          {/* Auth Buttons (Desktop) - Updated Sign Up button and hover states */}
+          {/* Auth Buttons (Desktop) */}
           <div className="hidden md:flex items-center space-x-4">
             {!isLoggedIn ? (
               <>
@@ -128,7 +147,6 @@ const Header = () => {
                 >
                   Login
                 </Link>
-                {/* PRIMARY CTA - Applied shared style */}
                 <Link
                   to="/signup"
                   className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-400 text-white rounded-xl font-medium
@@ -185,7 +203,7 @@ const Header = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button - Updated hover state */}
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden p-2 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200"
@@ -194,7 +212,7 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation - Updated to Blue selection colors */}
+        {/* Mobile Navigation */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
@@ -206,7 +224,7 @@ const Header = () => {
             >
               <div className="px-2 pt-2 pb-3 space-y-1">
                 {navigation.map((item) => {
-                  const IconComponent = item.icon;
+                  const Icon = item.icon;
                   return (
                     <Link
                       key={item.name}
@@ -218,7 +236,7 @@ const Header = () => {
                           : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                       }`}
                     >
-                      <IconComponent className="w-5 h-5" />
+                      <Icon className="w-5 h-5" />
                       <span>{item.name}</span>
                     </Link>
                   );
@@ -235,7 +253,6 @@ const Header = () => {
                       >
                         Login
                       </Link>
-                      {/* Sign Up Button (Mobile) - Applied shared style */}
                       <Link
                         to="/signup"
                         onClick={() => setIsMenuOpen(false)}
@@ -265,7 +282,10 @@ const Header = () => {
                               >
                                 <Link
                                   to="/rewards"
-                                  onClick={() => { setIsPointsDropdownOpen(false); setIsMenuOpen(false); }}
+                                  onClick={() => {
+                                    setIsPointsDropdownOpen(false);
+                                    setIsMenuOpen(false);
+                                  }}
                                   className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
                                 >
                                   <Trophy className="w-4 h-4" />

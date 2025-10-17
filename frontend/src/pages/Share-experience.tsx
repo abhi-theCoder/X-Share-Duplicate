@@ -10,6 +10,7 @@ import {
 import { GripVertical, ChevronDown, ChevronUp, ArrowRight, Rocket, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoginRequired from '../components/LoginRequired';
+import verifyToken from '../components/verifyLogin';
 
 // Colors and styles based on Home.js palette
 const PALETTE = {
@@ -90,7 +91,15 @@ export default function ShareExperiencePage(): JSX.Element {
         if (!token) {
           setError('User not authenticated.');
           setLoading(false);
+          navigate('/login');
           return;
+        }
+        const valid = await verifyToken(token);
+        console.log(valid)
+        if (!valid) {
+            localStorage.removeItem('token');
+            navigate('/login');
+            return;
         }
       } catch (err) {
         console.error('Failed to fetch profile:', err);
@@ -103,9 +112,9 @@ export default function ShareExperiencePage(): JSX.Element {
     fetchProfile();
   }, []);
 
-  if (error === 'User not authenticated.') {
-    return <LoginRequired />;
-  }
+  // if (error === 'User not authenticated.') {
+  //   return <LoginRequired />;
+  // }
 
   const handleSubmit = async () => {
     if (!validateCurrentStep()) {

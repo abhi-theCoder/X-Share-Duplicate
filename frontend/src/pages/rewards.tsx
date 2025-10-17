@@ -7,6 +7,8 @@ import backpack from '../images/backpack.png';
 import coffeeMug from '../images/coffee-mug.png';
 import notebookPen from '../images/notebook-pen.png';
 import tshirt from '../images/tshirt.png';
+import { verifyToken } from '../components/verifyLogin';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api';
 
 // Types
@@ -71,6 +73,7 @@ const StarPop = () => {
 };
 
 const Rewards: React.FC = () => {
+    const navigate = useNavigate();
     const [user, setUser] = useState<User | null>(null);
     const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -82,22 +85,44 @@ const Rewards: React.FC = () => {
     const pointsToInrRate = 10;
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const verifyAndFetchProfile = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.warn('No token found.');
+                navigate('/login');
+                return;
+            }
+
             try {
+                const valid = await verifyToken(token);
+
+                if (!valid) {
+                    console.warn('Invalid or expired token.');
+                    localStorage.removeItem('token');
+                    navigate('/login');
+                    return;
+                }
+
                 const res = await axios.get('/api/profile', {
-                    headers: { Authorization: `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
                 });
+
                 setUser({
                     name: res.data.name || 'User',
-                    points: res.data.points || 0,
-                    balance: 500,
+                    points: res.data.points ?? 0,
+                    balance: res.data.balance ?? 0, // ✅ backend-driven balance
                 });
-            } catch (error) {
-                console.error('Failed to fetch profile:', error);
+
+            } catch (error: any) {
+                console.error('Error verifying/fetching profile:', error);
+                localStorage.removeItem('token');
+                navigate('/login');
             }
         };
-        fetchProfile();
-    }, []);
+
+        verifyAndFetchProfile();
+    }, [navigate]);
+
 
     const modalSpring = useSpring({
         opacity: modalOpen ? 1 : 0,
