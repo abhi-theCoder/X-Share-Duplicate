@@ -83,15 +83,26 @@ const TemplateModern: React.FC<TemplateProps> = ({ data }) => {
 
                     {/* Skills */}
                     {skills.length > 0 && (
-                        <div>
-                            {renderSectionTitle('Skills')}
-                            <div className="space-y-1">
-                                {skills.map((skill, index) => (
-                                    <p key={index} className="text-xs font-medium text-gray-700 border-l-2 border-blue-300 pl-2">{skill}</p>
-                                ))}
-                            </div>
-                        </div>
+                    <div className="mb-4">
+                        {renderSectionTitle('Skills')}
+                        <ul className="flex flex-wrap">
+                        {skills.map((skill, index) => (
+                            <li
+                            key={index}
+                            className="text-xs font-medium bg-gray-100 rounded-full px-2 py-0.5 inline-block mr-1 mb-1"
+                            >
+                            {skill.name}
+                            {skill.level && (
+                                <span className="text-gray-500 text-[10px] ml-1">
+                                ({skill.level})
+                                </span>
+                            )}
+                            </li>
+                        ))}
+                        </ul>
+                    </div>
                     )}
+
 
                     {/* Education */}
                     {education.length > 0 && (
