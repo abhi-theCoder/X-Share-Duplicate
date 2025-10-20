@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import LoginRequired from '../components/LoginRequired';
+import LoginRequired from '../LoginRequired';
 import axios from '../api';
 
 import {
