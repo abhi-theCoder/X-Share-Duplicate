@@ -2,14 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Users, MessageCircle, BookOpen, Trophy, User, LogOut, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from '../api'; // Import axios
+import axios from 'axios'; // Import axios
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userPoints, setUserPoints] = useState(null);
+  const [userPoints, setUserPoints] = useState<number | null>(null);
   const [isPointsDropdownOpen, setIsPointsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,15 +22,10 @@ const Header = () => {
         setUserPoints(null);
         return;
       }
-
       try {
         const response = await axios.get('/api/profile', {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         setUserPoints(response.data.points);
       } catch (error) {
         console.error("Failed to fetch user profile:", error);
@@ -41,18 +36,15 @@ const Header = () => {
     fetchUserPoints();
   }, [location]);
 
-  // Handle clicks outside the points dropdown to close it
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsPointsDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -67,9 +59,10 @@ const Header = () => {
     { name: 'Resources', href: '/resources', icon: BookOpen },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Profile', href: '/profile', icon: User },
+    { name: 'Resume', href: '/resume-builder', icon: Award }, // <-- Resume link added
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <motion.header
@@ -217,69 +210,24 @@ const Header = () => {
                 })}
 
                 {/* Auth Buttons (Mobile) */}
-                <div className="pt-4 space-y-2">
-                  {!isLoggedIn ? (
-                    <>
-                      <Link
-                        to="/login"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="block w-full text-center px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200"
-                      >
-                        Login
-                      </Link>
-                      <Link
-                        to="/signup"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="block w-full text-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
-                      >
-                        Sign Up
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      {userPoints !== null && (
-                        <div className="relative">
-                          <button
-                            onClick={() => setIsPointsDropdownOpen(!isPointsDropdownOpen)}
-                            className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200 rounded-lg hover:bg-orange-50"
-                          >
-                            <Award className="w-5 h-5" />
-                            <span>{userPoints} Points</span>
-                          </button>
-                          <AnimatePresence>
-                            {isPointsDropdownOpen && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="mt-2 w-full bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100"
-                              >
-                                <Link
-                                  to="/rewards"
-                                  onClick={() => { setIsPointsDropdownOpen(false); setIsMenuOpen(false); }}
-                                  className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                                >
-                                  <Trophy className="w-4 h-4" />
-                                  <span>Rewards</span>
-                                </Link>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
-                      </button>
-                    </>
-                  )}
-                </div>
+                {!isLoggedIn && (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block w-full text-center px-4 py-2 text-gray-600 hover:text-orange-600 font-medium transition-colors duration-200"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block w-full text-center px-4 py-2 bg-gradient-to-r from-orange-500 to-green-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-green-700 transition-all duration-200"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
               </div>
             </motion.div>
           )}
