@@ -13,7 +13,7 @@ import TemplateModern from '../templatess/TemplateModern';
 import TemplateProfessional from '../templatess/TemplateProfessional'; // New Template Import
 import SherlockHolmesModified from '../templatess/SherlockHolmesModified';
 // ------------------------
-
+ 
 // ---- Types (Must be accurate for both builder and templates) ----
 interface PersonalInfo { name: string; title: string; email: string; phone: string; location: string; linkedin: string; github: string; portfolio: string; }
 interface ExperienceItem { id: string; title: string; company: string; startDate: string; endDate: string; description: string; }
